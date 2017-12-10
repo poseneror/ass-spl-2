@@ -16,9 +16,9 @@ import java.util.Collection;
 public abstract class Action<R> {
 
     private Promise promise;
-    private ActorThreadPool pool;
-    private String actorID;
-    private PrivateState actorState;
+    protected ActorThreadPool pool;
+    protected String actorID;
+    protected PrivateState actorState;
     private callback continueCallback;
 
     private String actionName;
