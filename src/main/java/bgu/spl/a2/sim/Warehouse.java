@@ -1,4 +1,4 @@
-package main.java.bgu.spl.a2.sim;
+package bgu.spl.a2.sim;
 
 /**
  * represents a warehouse that holds a finite amount of computers

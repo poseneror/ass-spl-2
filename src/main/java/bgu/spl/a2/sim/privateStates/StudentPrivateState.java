@@ -1,4 +1,4 @@
-package main.java.bgu.spl.a2.sim.privateStates;
+package bgu.spl.a2.sim.privateStates;
 
 import java.util.HashMap;
 
@@ -17,9 +17,10 @@ public class StudentPrivateState extends PrivateState{
 	 * you allowed to add any other parameter to this constructor - changing
 	 * this may cause automatic tests to fail..
 	 */
+
 	public StudentPrivateState() {
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		super();
+		grades = new HashMap<>();
 	}
 
 	public HashMap<String, Integer> getGrades() {

@@ -1,4 +1,4 @@
-package main.java.bgu.spl.a2.sim;
+package bgu.spl.a2.sim;
 
 import java.util.List;
 import java.util.Map;

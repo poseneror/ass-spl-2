@@ -25,6 +25,23 @@ public class ActorThreadPool {
 	private final int[] activeCounter = {0};
 
 	/**
+	 * getter for actors
+	 * @return actors
+	 */
+	public Map<String, PrivateState> getActors(){
+		return actorsStates;
+	}
+
+	/**
+	 * getter for actor's private state
+	 * @param actorId actor's id
+	 * @return actor's private state
+	 */
+	public PrivateState getPrivateState(String actorId){
+		return actorsStates.get(actorId);
+	}
+
+	/**
 	 * creates a {@link ActorThreadPool} which has nthreads. Note, threads
 	 * should not get started until calling to the {@link #start()} method.
 	 *

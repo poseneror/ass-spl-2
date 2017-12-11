@@ -10,10 +10,11 @@ import java.util.List;
  */
 public abstract class PrivateState {
 
-
+	//TODO: is it allowed to add a constructor here?
 	public PrivateState(){
 		history = new LinkedList<>();
 	}
+
 	// holds the actions' name what were executed
 	private List<String> history;
 

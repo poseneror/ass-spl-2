@@ -3,14 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main.java.bgu.spl.a2.sim;
+package bgu.spl.a2.sim;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import bgu.spl.a2.ActorThreadPool;
 import bgu.spl.a2.PrivateState;
 
-/**
+/**main.java.
  * A class describing the simulator for part 2 of the assignment
  */
 public class Simulator {
@@ -40,7 +41,7 @@ public class Simulator {
 	* shut down the simulation
 	* returns list of private states
 	*/
-	public static ConcurrentLinkedQueue<PrivateState> end(){
+	public static HashMap<String, PrivateState> end(){
 		//TODO: replace method body with real implementation
 		throw new UnsupportedOperationException("Not Implemented Yet.");
 	}

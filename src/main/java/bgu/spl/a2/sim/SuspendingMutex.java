@@ -1,4 +1,4 @@
-package main.java.bgu.spl.a2.sim;
+package bgu.spl.a2.sim;
 import bgu.spl.a2.Promise;
 
 /**
@@ -11,7 +11,10 @@ import bgu.spl.a2.Promise;
  *
  */
 public class SuspendingMutex {
-	
+
+	public SuspendingMutex(Computer computer){
+
+	}
 	
 	/**
 	 * Computer acquisition procedure
@@ -22,7 +25,7 @@ public class SuspendingMutex {
 	 * 
 	 * @return a promise for the requested computer
 	 */
-	public Promise<Computer> down(String computerType){
+	public Promise<Computer> down(){
 		//TODO: replace method body with real implementation
 		throw new UnsupportedOperationException("Not Implemented Yet.");
 	}
@@ -32,7 +35,7 @@ public class SuspendingMutex {
 	 * 
 	 * @param computer
 	 */
-	public void up(Computer computer){
+	public void up(){
 		//TODO: replace method body with real implementation
 		throw new UnsupportedOperationException("Not Implemented Yet.");
 	}

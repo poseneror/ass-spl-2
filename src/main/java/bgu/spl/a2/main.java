@@ -1,10 +1,7 @@
 package bgu.spl.a2;
 
-import sun.nio.ch.ThreadPool;
-
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 public class main {
     public static void main(String[] args) {
