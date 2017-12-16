@@ -1,5 +1,7 @@
 package bgu.spl.a2;
 
+import bgu.spl.a2.sim.Warehouse;
+
 import java.util.Collection;
 import java.util.LinkedList;
 

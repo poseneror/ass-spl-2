@@ -9,8 +9,11 @@ public class Computer {
 	long failSig;
 	long successSig;
 	
-	public Computer(String computerType) {
+	public Computer(String computerType, long successSig, long failSig)
+	{
 		this.computerType = computerType;
+		this.successSig = successSig;
+		this.failSig = failSig;
 	}
 	
 	/**
@@ -22,7 +25,17 @@ public class Computer {
 	 * @return a signature if couersesGrades grades meet the conditions
 	 */
 	public long checkAndSign(List<String> courses, Map<String, Integer> coursesGrades){
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		//TODO:check councurency problems
+		boolean pass = true;
+		for(String courseName : courses){
+			if(!coursesGrades.containsKey(courseName) || coursesGrades.get(courseName) < 56){
+				pass = false;
+			}
+		}
+		if(pass){
+			return successSig;
+		} else {
+			return failSig;
+		}
 	}
 }

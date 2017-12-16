@@ -6,21 +6,21 @@ import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
 import java.util.List;
 
-public class ParticipateInCourse extends Action {
+public class ParticipateInCourse extends Action<Boolean> {
 
     private Integer grade;
-    private String name;
-    public ParticipateInCourse(Integer grade, String name){
+    private String studentName;
+    public ParticipateInCourse(Integer grade, String studentName){
         super();
         this.grade = grade;
-        this.name = name;
+        this.studentName = studentName;
     }
 
     @Override
     protected void start() {
         CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(actorID);
         List<String> prequisites = course.getPrequisites();
-        StudentPrivateState student = (StudentPrivateState) pool.getPrivateState(name);
+        StudentPrivateState student = (StudentPrivateState) pool.getPrivateState(studentName);
 
         //TODO: check if can implement atomic integers - what if 2 students register at the same time when there is one spot left
         if(course.getAvailableSpots() > 0){
@@ -31,9 +31,14 @@ public class ParticipateInCourse extends Action {
                 }
             }
             if(pass){
-                course.addStudent(name);
+                course.addStudent(studentName);
                 student.getGrades().put(actorID, grade);
+                complete(true);
+            } else {
+                complete(false);
             }
+        } else {
+            complete(false);
         }
     }
 }

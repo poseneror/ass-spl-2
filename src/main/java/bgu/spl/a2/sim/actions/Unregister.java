@@ -4,19 +4,20 @@ import bgu.spl.a2.Action;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
-public class Unregister extends Action {
+public class Unregister extends Action<String> {
 
-    private String name;
+    private String studentName;
 
-    public Unregister(String name){
-        this.name = name;
+    public Unregister(String studnetName){
+        this.studentName = studnetName;
     }
 
     @Override
     protected void start() {
         CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(actorID);
-        course.removeStudent(name);
-        StudentPrivateState studnet = (StudentPrivateState) pool.getPrivateState(name);
+        course.removeStudent(studentName);
+        StudentPrivateState studnet = (StudentPrivateState) pool.getPrivateState(studentName);
         studnet.getGrades().remove(actorID);
+        complete("Student Unregistered");
     }
 }

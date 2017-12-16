@@ -36,6 +36,12 @@ public class DepartmentPrivateState extends PrivateState{
 		}
 	}
 
+	public void removeCourse(String courseName){
+		if(courseList.contains(courseName)){
+			courseList.remove(courseName);
+		}
+	}
+
 	public List<String> getCourseList() {
 		return courseList;
 	}
