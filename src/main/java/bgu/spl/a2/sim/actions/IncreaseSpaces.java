@@ -8,6 +8,8 @@ public class IncreaseSpaces extends Action<String> {
 
     public IncreaseSpaces(int amount){
         this.amount = amount;
+
+        setActionName("Increase Spaces");
     }
 
     @Override

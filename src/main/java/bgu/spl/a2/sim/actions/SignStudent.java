@@ -7,6 +7,10 @@ public class SignStudent extends Action<String> {
 
     private long sign;
 
+    public SignStudent(){
+        setActionName("Sign Student");
+    }
+
     public void setSign(long sign) {
         this.sign = sign;
     }

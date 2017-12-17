@@ -14,6 +14,8 @@ public class ParticipateInCourse extends Action<Boolean> {
         super();
         this.grade = grade;
         this.studentName = studentName;
+
+        setActionName("Participate In Course");
     }
 
     @Override

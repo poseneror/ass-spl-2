@@ -40,8 +40,9 @@ public class Warehouse {
         SuspendingMutex mutex = computers.get(cType);
         if(mutex != null){
             mutex.up();
+        } else {
+            throw new NoSuchElementException();
         }
-        throw new NoSuchElementException();
     }
 
     public static Warehouse getInstance(){

@@ -79,9 +79,6 @@
 "Course": "Data Bases"
 },
 {
-"Action" : "End Registeration"
-},
-{
 "Action" : "Administrative Check",
 "Department": "CS",
 "Students": ["123456789","5959595959"],

@@ -21,6 +21,8 @@ public class CheckObligations extends Action<String> {
         this.students = students;
         this.conditions = conditions;
         this.cType = cType;
+
+        setActionName("Check Obligations");
     }
 
 

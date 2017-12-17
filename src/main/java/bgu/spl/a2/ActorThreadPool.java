@@ -74,6 +74,7 @@ public class ActorThreadPool {
 					lookForActions();
 					synchronized (activeCounter){
 						activeCounter[0]--;
+						shutdownVM.inc();
 					}
 				}
 
@@ -85,14 +86,16 @@ public class ActorThreadPool {
 							if (version != actionsVM.getVersion() || shutdown[0]) {
 								throw new ConcurrentModificationException();
 							} else {
-								if(!actorsQueues.get(id).isEmpty()){
-									if(isActorLocked.get(id).compareAndSet(false, true)){
+								if (isActorLocked.get(id).compareAndSet(false, true)) {
+									if (!actorsQueues.get(id).isEmpty()) {
 										Action action = actorsQueues.get(id).remove();
 										actionsVM.inc();
 										hasActions = true;
+										System.out.println("Started - " + action.getActionName());
 										action.handle(myPool, id, actorsStates.get(id));
-										isActorLocked.get(id).set(false);
+										System.out.println("Finished - " + action.getActionName());
 									}
+									isActorLocked.get(id).set(false);
 								}
 							}
 						}
@@ -107,9 +110,6 @@ public class ActorThreadPool {
 					} catch (ConcurrentModificationException ex){
 						if(!shutdown[0]) {
 							lookForActions();
-						} else {
-							// let the shutdown know one more thread is down
-							shutdownVM.inc();
 						}
 					}
 				}

@@ -15,6 +15,8 @@ public class AddStudent extends Action<String> {
     public AddStudent(String name){
         super();
         this.name = name;
+
+        setActionName("Add Student");
     }
 
     @Override

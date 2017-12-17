@@ -10,6 +10,7 @@ public class Unregister extends Action<String> {
 
     public Unregister(String studnetName){
         this.studentName = studnetName;
+        setActionName("Unregister");
     }
 
     @Override

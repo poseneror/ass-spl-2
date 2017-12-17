@@ -20,6 +20,8 @@ public class OpenCourse extends Action<String> {
         this.capacity = capacity;
         this.prequisites = pre;
         this.courseName = courseName;
+
+        setActionName("Open Course");
     }
     @Override
     protected void start() {

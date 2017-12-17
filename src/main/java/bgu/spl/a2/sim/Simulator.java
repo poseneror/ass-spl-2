@@ -4,20 +4,22 @@
  * and open the template in the editor.
  */
 package bgu.spl.a2.sim;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
-import bgu.spl.a2.Action;
-import bgu.spl.a2.ActorThreadPool;
-import bgu.spl.a2.PrivateState;
+import bgu.spl.a2.*;
+import bgu.spl.a2.sim.actions.*;
 import bgu.spl.a2.sim.json.JsonAction;
 import bgu.spl.a2.sim.json.JsonComputer;
 import bgu.spl.a2.sim.json.JsonInput;
+import bgu.spl.a2.sim.privateStates.CoursePrivateState;
+import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
+import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 
@@ -26,7 +28,6 @@ import com.google.gson.stream.JsonReader;
  */
 public class Simulator {
 
-	
 	public static ActorThreadPool actorThreadPool;
 
 	/**
@@ -50,11 +51,16 @@ public class Simulator {
 	* returns list of private states
 	*/
 	public static HashMap<String, PrivateState> end(){
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		try {
+			actorThreadPool.shutdown();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return (HashMap<String, PrivateState>) actorThreadPool.getActors();
 	}
-	
-	
+
+	private static final int[] submitedActions = {0};
+	private static final VersionMonitor vm = new VersionMonitor();
 	public static void main(String [] args){
 		try {
 			Gson gson = new Gson();
@@ -69,17 +75,169 @@ public class Simulator {
 								Long.parseLong(jsonComputer.getSigFail()));
 			}
 
-			//Phase 1:
-			for(JsonAction actionConf : input.getPhase1()){
-				String actionName = actionConf.getAction();
+			start();
 
+			//Phase 1:
+			submitedActions[0] += input.getPhase1().size();
+			int version = vm.getVersion();
+			for(JsonAction actionConf : input.getPhase1()){
+				submitAction(actionConf);
 			}
-//			start();
+			try {
+				vm.await(version);
+			} catch (InterruptedException e1) {
+				System.out.println("FINISHED PHASE 1");
+				submitedActions[0] += input.getPhase2().size();
+				version = vm.getVersion();
+				for(JsonAction actionConf : input.getPhase2()){
+					submitAction(actionConf);
+				}
+				try{
+					vm.await(version);
+				} catch (InterruptedException e2){
+					System.out.println("FINISHED PHASE 2");
+					submitedActions[0] += input.getPhase3().size();
+					version = vm.getVersion();
+					for(JsonAction actionConf : input.getPhase3()){
+						submitAction(actionConf);
+					}
+					try{
+						vm.await(version);
+					} catch (InterruptedException e3){
+						System.out.println("FINISHED PHASE 3");
+						HashMap<String, PrivateState> result = end();
+						FileOutputStream fout = new FileOutputStream("result.ser");
+						try {
+							ObjectOutputStream oos = new ObjectOutputStream(fout);
+							oos.writeObject(result);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
-//	private Action getAction() {
-//
-//	}
+	private static void submitAction(JsonAction actionConf) {
+		Action action;
+		String actorId;
+		PrivateState privateState = null;
+		if(actionConf.getAction().equals("Open Course")){
+			action = new OpenCourse(
+					Integer.parseInt(actionConf.getSpace()),
+					actionConf.getPrerequisites(),
+					actionConf.getCourse()
+			);
+			actorId = actionConf.getDepartment();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new DepartmentPrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Add Student")){
+			action = new AddStudent(actionConf.getStudent());
+			actorId = actionConf.getDepartment();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new DepartmentPrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Participate In Course")){
+			int grade;
+			if(actionConf.getGrade().get(0).equals("-")){
+				grade = -1;
+			} else {
+				grade = Integer.parseInt(actionConf.getGrade().get(0));
+			}
+			action = new ParticipateInCourse(
+					grade,
+					actionConf.getStudent()
+			);
+			actorId = actionConf.getCourse();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new CoursePrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Add Spaces")){
+			action = new IncreaseSpaces(Integer.parseInt(actionConf.getNumber()));
+			actorId = actionConf.getCourse();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new CoursePrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Register With Preferences")){
+			List<Integer> grades = new ArrayList<>();
+			for(String gradeStr : actionConf.getGrade()){
+				if(gradeStr == "-"){
+					grades.add(-1);
+				} else {
+					grades.add(Integer.parseInt(gradeStr));
+				}
+			}
+			action = new RegisterWithPreferences(
+					actionConf.getPreferences(),
+					grades
+			);
+			actorId = actionConf.getStudent();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new StudentPrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Unregister")){
+			action = new Unregister(actionConf.getStudent());
+			actorId = actionConf.getCourse();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new CoursePrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Close Course")){
+			action = new CloseCourse(actionConf.getCourse());
+			actorId = actionConf.getDepartment();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new DepartmentPrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else if(actionConf.getAction().equals("Administrative Check")){
+			action = new CheckObligations(
+					actionConf.getStudents(),
+					actionConf.getConditions(),
+					actionConf.getComputer()
+			);
+			actorId = actionConf.getDepartment();
+			PrivateState actorState = actorThreadPool.getPrivateState(actorId);
+			if(actorState == null){
+				privateState = new DepartmentPrivateState();
+			} else {
+				privateState = actorState;
+			}
+		} else {
+			throw new IllegalArgumentException("Action");
+		}
+		action.getResult().subscribe(new callback() {
+			@Override
+			public void call() {
+				synchronized (submitedActions){
+					submitedActions[0]--;
+					if(submitedActions[0] == 0){
+						vm.inc();
+					}
+				}
+			}
+		});
+		actorThreadPool.submit(action, actorId, privateState);
+	}
 }

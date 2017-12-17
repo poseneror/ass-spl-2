@@ -14,6 +14,8 @@ public class CloseCourse extends Action<String> {
 
     public CloseCourse(String courseName){
         this.courseName = courseName;
+
+        setActionName("Close Course");
     }
 
     @Override
@@ -31,6 +33,7 @@ public class CloseCourse extends Action<String> {
             public void call() {
                 department.removeCourse(courseName);
                 course.setAvailableSpots(-1);
+                complete("Course closed");
             }
         });
 

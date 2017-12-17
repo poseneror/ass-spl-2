@@ -22,6 +22,7 @@ public class RegisterWithPreferences extends Action<String> {
         this.grades = grades;
         this.prefIter = preferences.iterator();
         this.gradeIter = grades.iterator();
+        setActionName("Register With Preferences");
     }
 
     @Override

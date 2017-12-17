@@ -74,6 +74,9 @@ public abstract class Action<R> {
         this.continueCallback = callback;
         final int[] counter = {0};
         final int expected = actions.size();
+        if(actions.isEmpty()){
+            pool.submit(act, actorID, actorState);
+        }
        	for(Action action : actions){
        	    action.getResult().subscribe(new callback() {
                 @Override
