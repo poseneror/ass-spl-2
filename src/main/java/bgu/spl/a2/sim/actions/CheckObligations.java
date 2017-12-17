@@ -14,11 +14,11 @@ import java.util.List;
 
 public class CheckObligations extends Action<String> {
 
-    private List<String> studnets, conditions;
+    private List<String> students, conditions;
     private String cType;
 
     public CheckObligations(List<String> students, List<String> conditions, String cType){
-        this.studnets = students;
+        this.students = students;
         this.conditions = conditions;
         this.cType = cType;
     }
@@ -26,9 +26,8 @@ public class CheckObligations extends Action<String> {
 
     @Override
     protected void start() {
-        DepartmentPrivateState department = (DepartmentPrivateState) pool.getPrivateState(actorID);
         final Collection<Action<String>> actions = new ArrayList<>();
-        for(String name : department.getStudentList()){
+        for(String name : students){
             final String studentName = name;
             final Promise<Computer> promise = Warehouse.getInstance().getComputer(cType);
             final StudentPrivateState student = (StudentPrivateState) pool.getPrivateState(studentName);

@@ -17,6 +17,7 @@ public class Unregister extends Action<String> {
         CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(actorID);
         course.removeStudent(studentName);
         StudentPrivateState studnet = (StudentPrivateState) pool.getPrivateState(studentName);
+        //TODO: let student do this?
         studnet.getGrades().remove(actorID);
         complete("Student Unregistered");
     }

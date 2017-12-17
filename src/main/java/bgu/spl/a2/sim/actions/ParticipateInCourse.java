@@ -32,6 +32,7 @@ public class ParticipateInCourse extends Action<Boolean> {
             }
             if(pass){
                 course.addStudent(studentName);
+                //TODO: let student do this?
                 student.getGrades().put(actorID, grade);
                 complete(true);
             } else {
