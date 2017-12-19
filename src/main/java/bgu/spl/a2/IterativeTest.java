@@ -9,11 +9,10 @@ import java.util.concurrent.CountDownLatch;
  */
 public class IterativeTest {
     public static void main(String[] args) {
-        final int numOfActors = 100;
+        final int numOfActors = 500;
         final int actionsPerActor = 100;
         CountDownLatch latch = new CountDownLatch(numOfActors);
         ActorThreadPool pool = new ActorThreadPool(150);
-        pool.start();
         for(int i = 1; i <= numOfActors; i++){
             final int id = i;
             pool.submit(new Action<String>() {
@@ -23,6 +22,7 @@ public class IterativeTest {
                 }
             }, "Actor" + id, new PrivateState() {});
         }
+        pool.start();
         // for each of the actors we created we will add one big action
         for(int j = 1; j <= numOfActors; j++){
             final int currentActorID = j;
