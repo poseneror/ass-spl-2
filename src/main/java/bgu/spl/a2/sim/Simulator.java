@@ -78,44 +78,57 @@ public class Simulator {
 			start();
 
 			//Phase 1:
-			submitedActions[0] += input.getPhase1().size();
-			int version = vm.getVersion();
-			for(JsonAction actionConf : input.getPhase1()){
-				submitAction(actionConf);
-			}
-			try {
-				vm.await(version);
-			} catch (InterruptedException e1) {
-				System.out.println("FINISHED PHASE 1");
-				submitedActions[0] += input.getPhase2().size();
-				version = vm.getVersion();
-				for(JsonAction actionConf : input.getPhase2()){
+			submitedActions[0] = input.getPhase1().size();
+			if(submitedActions[0] != 0) {
+				int version = vm.getVersion();
+				for (JsonAction actionConf : input.getPhase1()) {
 					submitAction(actionConf);
 				}
-				try{
+				try {
 					vm.await(version);
-				} catch (InterruptedException e2){
-					System.out.println("FINISHED PHASE 2");
-					submitedActions[0] += input.getPhase3().size();
-					version = vm.getVersion();
-					for(JsonAction actionConf : input.getPhase3()){
-						submitAction(actionConf);
-					}
-					try{
-						vm.await(version);
-					} catch (InterruptedException e3){
-						System.out.println("FINISHED PHASE 3");
-						HashMap<String, PrivateState> result = end();
-						FileOutputStream fout = new FileOutputStream("result.ser");
-						try {
-							ObjectOutputStream oos = new ObjectOutputStream(fout);
-							oos.writeObject(result);
-						} catch (IOException e) {
-							e.printStackTrace();
+				} catch (InterruptedException e1) {
+					System.out.println("FINISHED PHASE 1");
+					submitedActions[0] = input.getPhase2().size();
+					if(submitedActions[0] != 0) {
+						version = vm.getVersion();
+						for (JsonAction actionConf : input.getPhase2()) {
+							submitAction(actionConf);
 						}
+						try {
+							vm.await(version);
+						} catch (InterruptedException e2) {
+							System.out.println("FINISHED PHASE 2");
+							submitedActions[0] = input.getPhase3().size();
+							if(submitedActions[0] != 0) {
+								version = vm.getVersion();
+								for (JsonAction actionConf : input.getPhase3()) {
+									submitAction(actionConf);
+								}
+								try {
+									vm.await(version);
+								} catch (InterruptedException e3) {
+									System.out.println("FINISHED PHASE 3");
+									HashMap<String, PrivateState> result = end();
+									FileOutputStream fout = new FileOutputStream("result.ser");
+									try {
+										ObjectOutputStream oos = new ObjectOutputStream(fout);
+										oos.writeObject(result);
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+							} else {
+								end();
+							}
+						}
+					} else {
+						end();
 					}
 				}
+			} else {
+				end();
 			}
+			end();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -232,8 +245,10 @@ public class Simulator {
 			public void call() {
 				synchronized (submitedActions){
 					submitedActions[0]--;
+					System.out.println(submitedActions[0]);
 					if(submitedActions[0] == 0){
 						vm.inc();
+
 					}
 				}
 			}

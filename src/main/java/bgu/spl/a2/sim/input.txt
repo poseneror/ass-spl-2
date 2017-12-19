@@ -32,58 +32,19 @@
 "Action": "Add Student",
 "Department": "CS",
 "Student": "123456789"
-}
-],
-"Phase 2" : [
-{
-"Action": "Add Student",
-"Department": "Math",
-"Student": "132424353"
-},
-{
-"Action": "Participate In Course",
-"Student": "123456789",
-"Course": "SPL",
-"Grade": ["98"]
 },
 {
 "Action": "Add Student",
 "Department": "CS",
-"Student": "5959595959"
-},
-{
-"Action": "Add Spaces",
-"Course": "SPL",
-"Number": "100"
-},
-{
-"Action": "Participate In Course",
-"Student": "123456789",
-"Course": "Data Bases",
-"Grade": ["-"]
-},
+"Student": "113333224"
+}
+],
+"Phase 2" : [
 {
 "Action": "Register With Preferences",
 "Student": "5959595959",
 "Preferences": ["Data Bases","SPL"],
 "Grade": ["98","56"]
-},
-{
-"Action": "Unregister",
-"Student": "123456789",
-"Course": "Data Bases"
-},
-{
-"Action": "Close Course",
-"Department": "CS",
-"Course": "Data Bases"
-},
-{
-"Action" : "Administrative Check",
-"Department": "CS",
-"Students": ["123456789","5959595959"],
-"Computer": "A",
-"Conditions" : ["SPL", "Data Bases"]
 }
 ],
 "Phase 3": [

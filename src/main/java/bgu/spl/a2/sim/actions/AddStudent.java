@@ -24,6 +24,7 @@ public class AddStudent extends Action<String> {
         Action<String> newStu = new Action<String>() {
             @Override
             protected void start() {
+                setActionName("New student");
                 complete("Student created");
             }
         };

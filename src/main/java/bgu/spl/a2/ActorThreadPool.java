@@ -78,7 +78,7 @@ public class ActorThreadPool {
 					}
 				}
 
-				public void lookForActions() {
+				private void lookForActions() {
 					int version = actionsVM.getVersion();
 					boolean hasActions = false;
 					try {
@@ -86,16 +86,23 @@ public class ActorThreadPool {
 							if (version != actionsVM.getVersion() || shutdown[0]) {
 								throw new ConcurrentModificationException();
 							} else {
-								if (isActorLocked.get(id).compareAndSet(false, true)) {
-									if (!actorsQueues.get(id).isEmpty()) {
-										Action action = actorsQueues.get(id).remove();
-										actionsVM.inc();
-										hasActions = true;
-										System.out.println("Started - " + action.getActionName());
-										action.handle(myPool, id, actorsStates.get(id));
-										System.out.println("Finished - " + action.getActionName());
+								if (!actorsQueues.get(id).isEmpty()) {
+									if (isActorLocked.get(id).compareAndSet(false, true)) {
+										if (!actorsQueues.get(id).isEmpty()) {
+											if (version != actionsVM.getVersion() || shutdown[0]) {
+												isActorLocked.get(id).set(false);
+												throw new ConcurrentModificationException();
+											}
+											Action action = actorsQueues.get(id).remove();
+											hasActions = true;
+											action.handle(myPool, id, actorsStates.get(id));
+//											System.out.println(id + " finished - " + action.getActionName());
+											isActorLocked.get(id).set(false);
+											actionsVM.inc();
+										} else {
+											isActorLocked.get(id).set(false);
+										}
 									}
-									isActorLocked.get(id).set(false);
 								}
 							}
 						}
