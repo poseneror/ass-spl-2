@@ -2,17 +2,27 @@ package bgu.spl.a2;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Or on 19/12/2017.
  */
 public class IterativeTest {
+    private static final String ANSI_RED = "\u001B[31m";
+    private static final String ANSI_RESET = "\u001B[0m";
+
+    private static void printError(String text){
+        System.out.println(ANSI_RED + text + ANSI_RESET);
+    }
+
     public static void main(String[] args) {
         final int numOfActors = 150;
         final int actionsPerActor = 100;
+        final int threads = 20;
         CountDownLatch latch = new CountDownLatch(numOfActors);
-        ActorThreadPool pool = new ActorThreadPool(20);
+        ActorThreadPool pool = new ActorThreadPool(threads);
         for(int i = 1; i <= numOfActors; i++){
             final int id = i;
             pool.submit(new Action<String>() {
@@ -62,17 +72,54 @@ public class IterativeTest {
                 @Override
                 public void call() {
                     System.out.println(bigAction.getResult().get());
+
                     latch.countDown();
                 }
             });
         }
         try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            pool.shutdown();
+            latch.await(15, TimeUnit.SECONDS);
+            Thread.sleep(2000);
+            int waiting = 0;
+            Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+            for(Thread thread : threadSet){
+                if(thread.getName().contains("Thread")){
+                    if(thread.getState().equals(Thread.State.WAITING)){
+                        waiting++;
+                    } else {
+                        printError(thread.getName() + " should be waiting for more actions!");
+                    }
+                }
+            }
+            if(waiting != threads){
+                printError(threads - waiting + " threads are not in WAITING state when should be!");
+            }
+            Thread shutter = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try{
+                        pool.shutdown();
+                    } catch (InterruptedException e) {
+                        printError("Pool shutdown took to long1");
+                    }
+                }
+            });
+            shutter.start();
+            Thread.sleep(3000);
+            shutter.interrupt();
+            shutter.join();
+            waiting = 0;
+            for(Thread thread : threadSet){
+                if(thread.getName().contains("Thread")){
+                    if(thread.getState().equals(Thread.State.WAITING)){
+                        printError(thread.getName() + " is in WAITING state!");
+                        waiting++;
+                    }
+                }
+            }
+            if(waiting > 0){
+                printError(waiting + " threads are in WAITING state, and shouldn't be!");
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
