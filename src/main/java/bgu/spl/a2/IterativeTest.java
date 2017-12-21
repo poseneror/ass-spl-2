@@ -9,15 +9,16 @@ import java.util.concurrent.CountDownLatch;
  */
 public class IterativeTest {
     public static void main(String[] args) {
-        final int numOfActors = 500;
+        final int numOfActors = 150;
         final int actionsPerActor = 100;
         CountDownLatch latch = new CountDownLatch(numOfActors);
-        ActorThreadPool pool = new ActorThreadPool(150);
+        ActorThreadPool pool = new ActorThreadPool(20);
         for(int i = 1; i <= numOfActors; i++){
             final int id = i;
             pool.submit(new Action<String>() {
                 @Override
                 protected void start() {
+                    setActionName("Created actor " + id);
                     complete("Actor " + id + " created");
                 }
             }, "Actor" + id, new PrivateState() {});
@@ -51,7 +52,7 @@ public class IterativeTest {
                     then(actions, new callback() {
                         @Override
                         public void call() {
-                            complete("Big action of " + actorID + " is completed");
+                            complete("Big action of " + currentActorName + " is completed");
                         }
                     });
                 }

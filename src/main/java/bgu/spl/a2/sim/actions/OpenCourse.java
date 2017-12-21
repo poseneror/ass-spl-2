@@ -25,8 +25,13 @@ public class OpenCourse extends Action<String> {
     }
     @Override
     protected void start() {
-        //TODO: if i was submited to a student?
-        Action<String> newCourse = new NewCourse();
+        Action<String> newCourse = new Action<String>() {
+            @Override
+            protected void start() {
+                setActionName("Create course");
+                complete("Course created");
+            }
+        };
         Collection<Action<String>> actions = new ArrayList<>();
         actions.add(newCourse);
         CoursePrivateState course = new CoursePrivateState();
@@ -41,13 +46,5 @@ public class OpenCourse extends Action<String> {
                 complete("Course added to department");
             }
         });
-    }
-
-    private class NewCourse extends Action<String> {
-        @Override
-        protected void start() {
-            setActionName("Create course");
-            complete("Course created");
-        }
     }
 }

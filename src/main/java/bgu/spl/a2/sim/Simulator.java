@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -58,9 +59,7 @@ public class Simulator {
 		}
 		return (HashMap<String, PrivateState>) actorThreadPool.getActors();
 	}
-
-	private static final int[] submitedActions = {0};
-	private static final VersionMonitor vm = new VersionMonitor();
+	private static CountDownLatch phaseCounter;
 	public static void main(String [] args){
 		try {
 			Gson gson = new Gson();
@@ -78,52 +77,61 @@ public class Simulator {
 			start();
 
 			//Phase 1:
-			submitedActions[0] = input.getPhase1().size();
-			if(submitedActions[0] != 0) {
-				int version = vm.getVersion();
+			phaseCounter = new CountDownLatch(input.getPhase1().size());
+			if(phaseCounter.getCount() != 0) {
 				for (JsonAction actionConf : input.getPhase1()) {
 					submitAction(actionConf);
 				}
 				try {
-					vm.await(version);
-				} catch (InterruptedException e1) {
+					phaseCounter.await();
 					System.out.println("FINISHED PHASE 1");
-					submitedActions[0] = input.getPhase2().size();
-					if(submitedActions[0] != 0) {
-						version = vm.getVersion();
+					phaseCounter = new CountDownLatch(input.getPhase2().size());
+					if(phaseCounter.getCount() != 0) {
 						for (JsonAction actionConf : input.getPhase2()) {
 							submitAction(actionConf);
 						}
 						try {
-							vm.await(version);
-						} catch (InterruptedException e2) {
+							phaseCounter.await();
 							System.out.println("FINISHED PHASE 2");
-							submitedActions[0] = input.getPhase3().size();
-							if(submitedActions[0] != 0) {
-								version = vm.getVersion();
+							phaseCounter = new CountDownLatch(input.getPhase3().size());
+							if(phaseCounter.getCount() != 0) {
 								for (JsonAction actionConf : input.getPhase3()) {
 									submitAction(actionConf);
 								}
 								try {
-									vm.await(version);
-								} catch (InterruptedException e3) {
+									phaseCounter.await();
 									System.out.println("FINISHED PHASE 3");
 									HashMap<String, PrivateState> result = end();
-									FileOutputStream fout = new FileOutputStream("result.ser");
+
+
+									FileOutputStream fout = new FileOutputStream("output.txt");
 									try {
 										ObjectOutputStream oos = new ObjectOutputStream(fout);
-										oos.writeObject(result);
+										oos.write(gson.toJson(result).getBytes());
 									} catch (IOException e) {
 										e.printStackTrace();
 									}
+//									FileOutputStream fout = new FileOutputStream("result.ser");
+//									try {
+//										ObjectOutputStream oos = new ObjectOutputStream(fout);
+//										oos.writeObject(result);
+//									} catch (IOException e) {
+//										e.printStackTrace();
+//									}
+								} catch (InterruptedException e3) {
+									e3.printStackTrace();
 								}
 							} else {
 								end();
 							}
+						} catch (InterruptedException e2) {
+							e2.printStackTrace();
 						}
 					} else {
 						end();
 					}
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
 				}
 			} else {
 				end();
@@ -243,14 +251,7 @@ public class Simulator {
 		action.getResult().subscribe(new callback() {
 			@Override
 			public void call() {
-				synchronized (submitedActions){
-					submitedActions[0]--;
-					System.out.println(submitedActions[0]);
-					if(submitedActions[0] == 0){
-						vm.inc();
-
-					}
-				}
+				phaseCounter.countDown();
 			}
 		});
 		actorThreadPool.submit(action, actorId, privateState);

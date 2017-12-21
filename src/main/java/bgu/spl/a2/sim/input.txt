@@ -1,4 +1,3 @@
-
 {
 "threads": 8,
 "Computers" : [
@@ -17,16 +16,23 @@
 {
 "Action":"Open Course",
 "Department": "CS",
-"Course": "SPL",
-"Space": "400",
-"Prerequisites" : ["Data Structures", "Intro to CS"]
+"Course": "Intro To CS",
+"Space": "200",
+"Prerequisites" : []
 },
 {
 "Action":"Open Course",
 "Department": "CS",
-"Course": "Data Bases",
-"Space": "30",
-"Prerequisites" :  ["SPL"]
+"Course": "SPL",
+"Space": "1",
+"Prerequisites" : ["Intro To CS"]
+},
+{
+"Action":"Open Course",
+"Department": "CS",
+"Course": "Data Structures",
+"Space": "100",
+"Prerequisites" :  ["Intro To CS"]
 },
 {
 "Action": "Add Student",
@@ -36,24 +42,60 @@
 {
 "Action": "Add Student",
 "Department": "CS",
-"Student": "113333224"
+"Student": "5959595959"
 }
 ],
 "Phase 2" : [
 {
-"Action": "Register With Preferences",
+"Action": "Add Student",
+"Department": "Math",
+"Student": "132424353"
+},
+
+{
+"Action": "Participate In Course",
+"Student": "123456789",
+"Course": "Intro To CS",
+"Grade": ["77"]
+},
+
+{
+"Action": "Participate In Course",
 "Student": "5959595959",
-"Preferences": ["Data Bases","SPL"],
-"Grade": ["98","56"]
+"Course": "Intro To CS",
+"Grade": ["94"]
 }
 ],
 "Phase 3": [
+{
+"Action": "Participate In Course",
+"Student": "123456789",
+"Course": "SPL",
+"Grade": ["98"]
+},
+{
+"Action": "Participate In Course",
+"Student": "123456789",
+"Course": "Data Structures",
+"Grade": ["90"]
+},
+{
+"Action": "Participate In Course",
+"Student": "5959595959",
+"Course": "SPL",
+"Grade": ["100"]
+},
+{
+"Action": "Unregister",
+"Student": "123456789",
+"Course": "Data Structures"
+},
 {
 "Action" : "Administrative Check",
 "Department": "CS",
 "Students": ["123456789","5959595959"],
 "Computer": "A",
-"Conditions" : ["SPL", "Data Bases"]
+"Conditions" : ["SPL", "Data Structures"]
 }
 ]
 }

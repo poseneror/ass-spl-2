@@ -3,6 +3,7 @@ package bgu.spl.a2;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -20,9 +21,9 @@ public class ActorThreadPool {
 	private Map<String, AtomicBoolean> isActorLocked;
 	private Map<String, PrivateState> actorsStates;
 	private List<Thread> threads;
-	private final VersionMonitor actionsVM, shutdownVM;
+	private final VersionMonitor actionsVM;
 	private final boolean[] shutdown = {false};
-	private final int[] activeCounter = {0};
+	private final CountDownLatch shutDownLatch;
 
 	/**
 	 * getter for actors
@@ -54,9 +55,9 @@ public class ActorThreadPool {
 	 *            pool
 	 */
 	public ActorThreadPool(int nthreads) {
-		activeCounter[0] = 0;
+		//TODO: wait for all actions to finish? or just current ones
+		shutDownLatch = new CountDownLatch(nthreads);
 		actionsVM = new VersionMonitor();
-		shutdownVM = new VersionMonitor();
 		// if 2 actions would send message to the same queue we will have concurency problems:
 		actorsQueues = new ConcurrentHashMap<>();
 		actorsStates = new HashMap<>();
@@ -68,57 +69,39 @@ public class ActorThreadPool {
 				@Override
 				public void run() {
 					//TODO: check if thread safe - for now use optimistic try and fail
-					synchronized (activeCounter) {
-						activeCounter[0]++;
-					}
-					lookForActions();
-					synchronized (activeCounter){
-						activeCounter[0]--;
-						shutdownVM.inc();
-					}
-				}
-
-				private void lookForActions() {
-					int version = actionsVM.getVersion();
-					boolean hasActions = false;
-					try {
-						for (String id : actorsQueues.keySet()) {
-							if (version != actionsVM.getVersion() || shutdown[0]) {
-								throw new ConcurrentModificationException();
-							} else {
-								if (!actorsQueues.get(id).isEmpty()) {
-									if (isActorLocked.get(id).compareAndSet(false, true)) {
-										if (!actorsQueues.get(id).isEmpty()) {
-											if (version != actionsVM.getVersion() || shutdown[0]) {
-												isActorLocked.get(id).set(false);
-												throw new ConcurrentModificationException();
-											}
-											Action action = actorsQueues.get(id).remove();
-											hasActions = true;
-											action.handle(myPool, id, actorsStates.get(id));
-//											System.out.println(id + " finished - " + action.getActionName());
-											isActorLocked.get(id).set(false);
+					while(!shutdown[0]) {
+						try {
+							boolean found = false;
+							int version = actionsVM.getVersion();
+							for (String actorID : actorsQueues.keySet()) {
+								if (isActorLocked.get(actorID) == null ||
+										actorsStates.get(actorID) == null ){
+									throw new ConcurrentModificationException();
+								}
+								if (isActorLocked.get(actorID).compareAndSet(false, true)) {
+									if (!actorsQueues.get(actorID).isEmpty()) {
+										found = true;
+										Action action;
+										synchronized (actorsQueues.get(actorID)) {
+											action = actorsQueues.get(actorID).remove();
 											actionsVM.inc();
-										} else {
-											isActorLocked.get(id).set(false);
 										}
+										isActorLocked.get(actorID).set(false);
+										action.handle(myPool, actorID, myPool.getPrivateState(actorID));
+									} else {
+										isActorLocked.get(actorID).set(false);
 									}
 								}
 							}
-						}
-						if(!hasActions && version == actionsVM.getVersion()){
-							try{
-								actionsVM.await(version);
-							} catch (InterruptedException ex){
-
+							if (!found) {
+								try {
+									actionsVM.await(version);
+								} catch (InterruptedException ignore) {
+								}
 							}
-						}
-						throw new ConcurrentModificationException();
-					} catch (ConcurrentModificationException ex){
-						if(!shutdown[0]) {
-							lookForActions();
-						}
+						} catch (ConcurrentModificationException ignore){}
 					}
+					shutDownLatch.countDown();
 				}
 			});
 			threads.add(t);
@@ -141,11 +124,14 @@ public class ActorThreadPool {
 		// we use concurrent hash maps to avoid multiple value putting in the map
 		if(!actorsQueues.containsKey(actorId)){
 			//TODO: find a normal queue
-			actorsQueues.put(actorId, new ConcurrentLinkedQueue<>());
 			isActorLocked.put(actorId, new AtomicBoolean(false));
 			actorsStates.put(actorId, actorState);
+			actorsQueues.put(actorId, new ArrayDeque<>());
 		}
-		actorsQueues.get(actorId).add(action);
+
+		synchronized (actorsQueues.get(actorId)) {
+			actorsQueues.get(actorId).add(action);
+		}
 		//TODO: where do we store them?
 		actionsVM.inc();
 	}
@@ -163,13 +149,7 @@ public class ActorThreadPool {
 	public void shutdown() throws InterruptedException {
 		shutdown[0] = true;
 		actionsVM.inc(); // to put out of await()
-		while(activeCounter[0] != 0){
-			try {
-				shutdownVM.await(shutdownVM.getVersion());
-			} catch (InterruptedException ex){
-
-			}
-		}
+		shutDownLatch.await();
 	}
 
 	/**
