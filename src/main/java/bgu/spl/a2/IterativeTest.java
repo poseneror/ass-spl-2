@@ -18,6 +18,7 @@ public class IterativeTest {
     }
 
     public static void main(String[] args) {
+        int errorCount = 0;
         final int numOfActors = 150;
         final int actionsPerActor = 100;
         final int threads = 20;
@@ -72,14 +73,17 @@ public class IterativeTest {
                 @Override
                 public void call() {
                     System.out.println(bigAction.getResult().get());
-
                     latch.countDown();
                 }
             });
         }
         try {
-            latch.await(15, TimeUnit.SECONDS);
-            Thread.sleep(2000);
+            latch.await(2, TimeUnit.SECONDS);
+            if(latch.getCount() > 0){
+                errorCount++;
+                printError(latch.getCount() + " actors didn't finish their actions!");
+            }
+            Thread.sleep(1000);
             int waiting = 0;
             Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
             for(Thread thread : threadSet){
@@ -92,6 +96,7 @@ public class IterativeTest {
                 }
             }
             if(waiting != threads){
+                errorCount++;
                 printError(threads - waiting + " threads are not in WAITING state when should be!");
             }
             Thread shutter = new Thread(new Runnable() {
@@ -105,7 +110,7 @@ public class IterativeTest {
                 }
             });
             shutter.start();
-            Thread.sleep(3000);
+            Thread.sleep(1000);
             shutter.interrupt();
             shutter.join();
             waiting = 0;
@@ -118,11 +123,16 @@ public class IterativeTest {
                 }
             }
             if(waiting > 0){
+                errorCount++;
                 printError(waiting + " threads are in WAITING state, and shouldn't be!");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("COMPLETED");
+        if(errorCount == 0) {
+            System.out.println("COMPLETED");
+        } else {
+            printError("FINISHED WITH " + errorCount + " ERRORS!");
+        }
     }
 }

@@ -103,14 +103,14 @@ public class Simulator {
 									System.out.println("FINISHED PHASE 3");
 									HashMap<String, PrivateState> result = end();
 
-
-									FileOutputStream fout = new FileOutputStream("output.txt");
-									try {
-										ObjectOutputStream oos = new ObjectOutputStream(fout);
-										oos.write(gson.toJson(result).getBytes());
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
+//
+//									FileOutputStream fout = new FileOutputStream("output.txt");
+//									try {
+//										ObjectOutputStream oos = new ObjectOutputStream(fout);
+//										oos.write(gson.toJson(result).getBytes());
+//									} catch (IOException e) {
+//										e.printStackTrace();
+//									}
 //									FileOutputStream fout = new FileOutputStream("result.ser");
 //									try {
 //										ObjectOutputStream oos = new ObjectOutputStream(fout);

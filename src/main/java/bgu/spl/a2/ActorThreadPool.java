@@ -29,7 +29,7 @@ public class ActorThreadPool {
 	 * getter for actors
 	 * @return actors
 	 */
-	public Map<String, PrivateState> getActors(){
+	synchronized public Map<String, PrivateState> getActors(){
 		return actorsStates;
 	}
 
@@ -38,7 +38,7 @@ public class ActorThreadPool {
 	 * @param actorId actor's id
 	 * @return actor's private state
 	 */
-	public PrivateState getPrivateState(String actorId){
+	synchronized public PrivateState getPrivateState(String actorId){
 		return actorsStates.get(actorId);
 	}
 
@@ -59,7 +59,7 @@ public class ActorThreadPool {
 		shutDownLatch = new CountDownLatch(nthreads);
 		actionsVM = new VersionMonitor();
 		// if 2 actions would send message to the same queue we will have concurency problems:
-		actorsQueues = new ConcurrentHashMap<>();
+		actorsQueues = new HashMap<>();
 		actorsStates = new HashMap<>();
 		isActorLocked = new HashMap<>();
 		threads = new ArrayList<>(nthreads);
@@ -68,40 +68,56 @@ public class ActorThreadPool {
 			Thread t = new Thread(new Runnable() {
 				@Override
 				public void run() {
-					//TODO: check if thread safe - for now use optimistic try and fail
-					while(!shutdown[0]) {
-						try {
-							boolean found = false;
-							int version = actionsVM.getVersion();
-							for (String actorID : actorsQueues.keySet()) {
-								if (isActorLocked.get(actorID) == null ||
-										actorsStates.get(actorID) == null ){
-									throw new ConcurrentModificationException();
-								}
-								if (isActorLocked.get(actorID).compareAndSet(false, true)) {
-									if (!actorsQueues.get(actorID).isEmpty()) {
-										found = true;
-										Action action;
-										synchronized (actorsQueues.get(actorID)) {
-											action = actorsQueues.get(actorID).remove();
-											actionsVM.inc();
+					while (!shutdown[0]) {
+						while (!shutdown[0]) {
+							try {
+								boolean found = false;
+								int version = actionsVM.getVersion();
+								for (String actorID : actorsQueues.keySet()) {
+									if (isActorLocked.get(actorID) == null ||
+											actorsStates.get(actorID) == null) {
+										throw new ConcurrentModificationException();
+									}
+									if (isActorLocked.get(actorID).compareAndSet(false, true)) {
+										if (!actorsQueues.get(actorID).isEmpty()) {
+											found = true;
+											Action action;
+											synchronized (actorsQueues.get(actorID)) {
+												action = actorsQueues.get(actorID).remove();
+												actionsVM.inc();
+											}
+											action.handle(myPool, actorID, myPool.getPrivateState(actorID));
+											isActorLocked.get(actorID).set(false);
+										} else {
+											isActorLocked.get(actorID).set(false);
 										}
-										isActorLocked.get(actorID).set(false);
-										action.handle(myPool, actorID, myPool.getPrivateState(actorID));
-									} else {
-										isActorLocked.get(actorID).set(false);
 									}
 								}
-							}
-							if (!found) {
-								try {
-									actionsVM.await(version);
-								} catch (InterruptedException ignore) {
+								if (!found) {
+									try {
+										actionsVM.await(version);
+									} catch (InterruptedException ignore) {
+									}
 								}
+							} catch (ConcurrentModificationException ignore) {
 							}
-						} catch (ConcurrentModificationException ignore){}
+						}
+						shutDownLatch.countDown();
+//						int version = actionsVM.getVersion();
+//						AssignedAction action = getAction();
+//						if (action != null) {
+//							action.getAction().handle(myPool, action.getActorID(),
+//									getPrivateState(action.getActorID()));
+//							UnlockActor(action.getActorID());
+//							actionsVM.inc();
+//						} else {
+//							try {
+//								actionsVM.await(version);
+//							} catch (InterruptedException ignore) {}
+//						}
+//					}
+//					shutDownLatch.countDown();
 					}
-					shutDownLatch.countDown();
 				}
 			});
 			threads.add(t);
@@ -119,20 +135,49 @@ public class ActorThreadPool {
 	 * @param actorState
 	 *            actor's private state (actor's information)
 	 */
-	public void submit(Action<?> action, String actorId, PrivateState actorState) {
-		//TODO: chack toString();
-		// we use concurrent hash maps to avoid multiple value putting in the map
+
+	class AssignedAction{
+		private Action action;
+		private String actorID;
+
+		public AssignedAction(Action action, String actorID){
+			this.action = action;
+			this.actorID = actorID;
+		}
+
+		public Action getAction() {
+			return action;
+		}
+
+		public String getActorID() {
+			return actorID;
+		}
+	}
+
+	private synchronized void UnlockActor(String actorID){
+		isActorLocked.get(actorID).set(false);
+	}
+
+	private synchronized AssignedAction getAction(){
+		for (String actorID : actorsQueues.keySet()) {
+			if (!actorsQueues.get(actorID).isEmpty()) {
+				// try and get it!
+				if (isActorLocked.get(actorID).compareAndSet(false, true)) {
+					Action action = actorsQueues.get(actorID).remove();
+					return new AssignedAction(action, actorID);
+				}
+			}
+		}
+		return null;
+	}
+
+	public synchronized void submit(Action<?> action, String actorId, PrivateState actorState) {
 		if(!actorsQueues.containsKey(actorId)){
-			//TODO: find a normal queue
 			isActorLocked.put(actorId, new AtomicBoolean(false));
 			actorsStates.put(actorId, actorState);
 			actorsQueues.put(actorId, new ArrayDeque<>());
 		}
-
-		synchronized (actorsQueues.get(actorId)) {
-			actorsQueues.get(actorId).add(action);
-		}
-		//TODO: where do we store them?
+		actorsQueues.get(actorId).add(action);
 		actionsVM.inc();
 	}
 
