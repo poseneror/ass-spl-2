@@ -69,55 +69,18 @@ public class ActorThreadPool {
 				@Override
 				public void run() {
 					while (!shutdown[0]) {
-						while (!shutdown[0]) {
-							try {
-								boolean found = false;
-								int version = actionsVM.getVersion();
-								for (String actorID : actorsQueues.keySet()) {
-									if (isActorLocked.get(actorID) == null ||
-											actorsStates.get(actorID) == null) {
-										throw new ConcurrentModificationException();
-									}
-									if (isActorLocked.get(actorID).compareAndSet(false, true)) {
-										if (!actorsQueues.get(actorID).isEmpty()) {
-											found = true;
-											Action action;
-											synchronized (actorsQueues.get(actorID)) {
-												action = actorsQueues.get(actorID).remove();
-												actionsVM.inc();
-											}
-											action.handle(myPool, actorID, myPool.getPrivateState(actorID));
-											isActorLocked.get(actorID).set(false);
-										} else {
-											isActorLocked.get(actorID).set(false);
-										}
-									}
-								}
-								if (!found) {
-									try {
-										actionsVM.await(version);
-									} catch (InterruptedException ignore) {
-									}
-								}
-							} catch (ConcurrentModificationException ignore) {
-							}
+						int version = actionsVM.getVersion();
+						AssignedAction action = getAction();
+						if (action != null) {
+							action.getAction().handle(myPool, action.getActorID(),
+									getPrivateState(action.getActorID()));
+							UnlockActor(action.getActorID());
+							actionsVM.inc();
+						} else {
+							try {actionsVM.await(version);} catch (InterruptedException ignore) {}
 						}
-						shutDownLatch.countDown();
-//						int version = actionsVM.getVersion();
-//						AssignedAction action = getAction();
-//						if (action != null) {
-//							action.getAction().handle(myPool, action.getActorID(),
-//									getPrivateState(action.getActorID()));
-//							UnlockActor(action.getActorID());
-//							actionsVM.inc();
-//						} else {
-//							try {
-//								actionsVM.await(version);
-//							} catch (InterruptedException ignore) {}
-//						}
-//					}
-//					shutDownLatch.countDown();
 					}
+					shutDownLatch.countDown();
 				}
 			});
 			threads.add(t);
@@ -160,11 +123,12 @@ public class ActorThreadPool {
 
 	private synchronized AssignedAction getAction(){
 		for (String actorID : actorsQueues.keySet()) {
-			if (!actorsQueues.get(actorID).isEmpty()) {
-				// try and get it!
-				if (isActorLocked.get(actorID).compareAndSet(false, true)) {
+			if (isActorLocked.get(actorID).compareAndSet(false, true)) {
+				if (!actorsQueues.get(actorID).isEmpty()) {
 					Action action = actorsQueues.get(actorID).remove();
 					return new AssignedAction(action, actorID);
+				} else {
+					isActorLocked.get(actorID).set(false);
 				}
 			}
 		}
@@ -193,7 +157,7 @@ public class ActorThreadPool {
 	 */
 	public void shutdown() throws InterruptedException {
 		shutdown[0] = true;
-		actionsVM.inc(); // to put out of await()
+		actionsVM.inc();
 		shutDownLatch.await();
 	}
 

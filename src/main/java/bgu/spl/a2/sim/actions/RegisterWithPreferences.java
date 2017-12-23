@@ -32,10 +32,7 @@ public class RegisterWithPreferences extends Action<String> {
             Integer grade = gradeIter.next();
             final ParticipateInCourse participate = new ParticipateInCourse(grade, actorID);
             CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(preference);
-            Collection<Action<Boolean>> actions = new ArrayList<>();
-            actions.add(participate);
-            sendMessage(participate, preference, course);
-            then(actions, new callback() {
+            sendMessage(participate, preference, course).subscribe(new callback() {
                 @Override
                 public void call() {
                     if (participate.getResult().get()) {

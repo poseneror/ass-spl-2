@@ -102,7 +102,6 @@ public abstract class Action<R> {
         //TODO: check if should add here or on submit
         actorState.addRecord(getActionName());
        	promise.resolve(result);
-//        System.out.println(actorID + " finished - " + getActionName());
     }
     
     /**

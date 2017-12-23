@@ -32,19 +32,17 @@ public class OpenCourse extends Action<String> {
                 complete("Course created");
             }
         };
-        Collection<Action<String>> actions = new ArrayList<>();
-        actions.add(newCourse);
         CoursePrivateState course = new CoursePrivateState();
         course.setAvailableSpots(capacity);
         course.setPrequisites(prequisites);
-        sendMessage(newCourse, courseName, course);
-        then(actions, new callback() {
+        sendMessage(newCourse, courseName, course).subscribe(new callback() {
             @Override
             public void call() {
-                DepartmentPrivateState department = (DepartmentPrivateState) pool.getPrivateState(actorID);
-                department.addCourse(courseName);
                 complete("Course added to department");
             }
         });
+
+        DepartmentPrivateState department = (DepartmentPrivateState) pool.getPrivateState(actorID);
+        department.addCourse(courseName);
     }
 }
