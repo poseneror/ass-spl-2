@@ -14,7 +14,7 @@ public class main {
         for(int i = 0; i < 100; i++){
             String[] a = {"src/main/java/bgu/spl/a2/sim/input.txt"};
             try {
-                Simulator.main(a);
+                IterativeTest.main(a);
             } catch (Exception e){
                 e.printStackTrace();
             }

@@ -1,10 +1,7 @@
 package bgu.spl.a2;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -18,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * methods
  */
 public class ActorThreadPool {
-	private Map<String, Queue<Action>> actorsQueues;
+	private Map<String, ConcurrentLinkedDeque<Action>> actorsQueues;
 	private Map<String, AtomicBoolean> isActorLocked;
 	private Map<String, PrivateState> actorsStates;
 	private List<Thread> threads;
@@ -56,7 +53,6 @@ public class ActorThreadPool {
 	 *            pool
 	 */
 	public ActorThreadPool(int nthreads) {
-		//TODO: wait for all actions to finish? or just current ones
 		shutDownLatch = new CountDownLatch(nthreads);
 		actionsVM = new VersionMonitor();
 		// if 2 actions would send message to the same queue we will have concurency problems:
@@ -140,7 +136,7 @@ public class ActorThreadPool {
 		if(!actorsQueues.containsKey(actorId)){
 			isActorLocked.put(actorId, new AtomicBoolean(false));
 			actorsStates.put(actorId, actorState);
-			actorsQueues.put(actorId, new ArrayDeque<>());
+			actorsQueues.put(actorId, new ConcurrentLinkedDeque<>());
 		}
 		actorsQueues.get(actorId).add(action);
 		actionsVM.inc();

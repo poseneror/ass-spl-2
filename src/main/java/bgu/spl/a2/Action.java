@@ -1,6 +1,7 @@
 package bgu.spl.a2;
 
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * an abstract class that represents an action that may be executed using the
@@ -21,10 +22,13 @@ public abstract class Action<R> {
     protected PrivateState actorState;
     private callback continueCallback;
 
+    private boolean secondGo;
+
     private String actionName;
 
     public Action(){
         promise = new Promise();
+        secondGo = false;
     }
 
 	/**
@@ -50,8 +54,7 @@ public abstract class Action<R> {
        this.pool = pool;
        this.actorID = actorId;
        this.actorState = actorState;
-
-       if(continueCallback == null){
+       if(!secondGo){
            start();
        } else {
            continueCallback.call();
@@ -71,9 +74,7 @@ public abstract class Action<R> {
      */
     protected final void then(Collection<? extends Action<?>> actions, callback callback) {
         final Action act = this;
-        this.continueCallback = callback;
-        final int[] counter = {0};
-        final int expected = actions.size();
+        CountDownLatch counter = new CountDownLatch(actions.size());
         if(actions.isEmpty()){
             pool.submit(act, actorID, actorState);
         }
@@ -81,11 +82,11 @@ public abstract class Action<R> {
        	    action.getResult().subscribe(new callback() {
                 @Override
                 public void call() {
-                    synchronized (counter) {
-                        counter[0]++;
-                        if (counter[0] == expected) {
-                            pool.submit(act, actorID, actorState);
-                        }
+                    counter.countDown();
+                    if (counter.getCount() == 0) {
+                        continueCallback = callback;
+                        secondGo = true;
+                        pool.submit(act, actorID, actorState);
                     }
                 }
             });
@@ -99,7 +100,6 @@ public abstract class Action<R> {
      * @param result - the action calculated result
      */
     protected final void complete(R result) {
-        //TODO: check if should add here or on submit
         actorState.addRecord(getActionName());
        	promise.resolve(result);
     }

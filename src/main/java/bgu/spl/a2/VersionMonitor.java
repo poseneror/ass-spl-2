@@ -22,17 +22,16 @@ public class VersionMonitor {
         this.current_version = 0;
     }
 
-    public int getVersion() { return current_version; }
+    synchronized public int getVersion() { return current_version; }
 
     synchronized public void inc() {
         current_version++;
         notifyAll();
-    };
+    }
 
     synchronized public void await(int version) throws InterruptedException {
         while(getVersion() == version){
             wait();
         }
-        throw new InterruptedException();
     }
 }

@@ -19,18 +19,31 @@ import java.util.concurrent.TimeUnit;
 public class IterativeTest {
     private static final String ANSI_RED = "\u001B[31m";
     private static final String ANSI_RESET = "\u001B[0m";
-    private static int errorCount = 0;
+    private static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    private static int errorCount;
+
     private static void printError(String text){
         System.out.println(ANSI_RED + text + ANSI_RESET);
         errorCount++;
     }
 
+    private static void printSucc(String text){
+        System.out.println(ANSI_GREEN + text + ANSI_RESET);
+    }
+
+    private static void printHead(String text){
+        System.out.println(ANSI_CYAN + text + ANSI_RESET);
+    }
+
     public static void main(String[] args) {
-        System.out.println("####### PART 1 STARTS HERE! #######");
+        errorCount = 0;
+        printHead("####### PART 1 STARTS HERE! #######");
         final int numOfActors = 100;
         final int actionsPerActor = 300;
-        final int threads = 50;
-        CountDownLatch latch = new CountDownLatch(numOfActors);
+        final int threads = 20;
+        System.out.println("CREATING " + numOfActors + " ACTORS");
+        CountDownLatch actorslatch = new CountDownLatch(numOfActors);
         ActorThreadPool pool = new ActorThreadPool(threads);
         for(int i = 1; i <= numOfActors; i++){
             final int id = i;
@@ -39,22 +52,76 @@ public class IterativeTest {
                 protected void start() {
                     setActionName("Created actor " + id);
                     complete("Actor " + id + " created");
+                    actorslatch.countDown();
                 }
             }, "Actor" + id, new PrivateState() {});
         }
         pool.start();
+
+        try{
+            actorslatch.await(5, TimeUnit.SECONDS);
+            if(actorslatch.getCount() > 0){
+                printError(actorslatch.getCount() + " actors were not created (action never finished)!");
+            } else if(pool.getActors().size() != numOfActors){
+                printError(numOfActors - pool.getActors().size() + " actors were not added to the pool!");
+            } else {
+                printSucc("TEST OF ACTOR CREATION WAS COMPLETED WITH SUCCESS!");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("ADDING " + numOfActors * actionsPerActor  * 10 + " MINI-ACTIONS TO THE ACTORS IN THE POOL");
+        CountDownLatch miniLatch = new CountDownLatch(numOfActors * actionsPerActor  * 10 );
+        for(int k = 1; k <= numOfActors*actionsPerActor * 10; k++) {
+            final String nextActor = "Actor" + (1 + (k % (numOfActors)));
+            final int name = k;
+            Action<String> miniAction = new Action<String>() {
+                @Override
+                protected void start() {
+                    setActionName("SubAction " + name);
+                    complete("Action num " + name + " is completed");
+                }
+            };
+            miniAction.getResult().subscribe(new callback() {
+                @Override
+                public void call() {
+                    miniLatch.countDown();
+                }
+            });
+            pool.submit(miniAction, nextActor, pool.getPrivateState(nextActor));
+        }
+
+        try{
+            miniLatch.await(5, TimeUnit.SECONDS);
+            if(miniLatch.getCount() > 0){
+                printError(miniLatch.getCount() + " actions are not done!");
+            } else {
+                printSucc("TEST OF MINI-ACTIONS WAS COMPLETED WITH SUCCESS!");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         // for each of the actors we created we will add one big action
-        for(int j = 1; j <= numOfActors; j++){
+        System.out.println("ADDING " + numOfActors + " BIG-ACTIONS TO THE ACTORS IN THE POOL");
+        CountDownLatch megaLatch = new CountDownLatch(numOfActors);
+//        miniLatch = new CountDownLatch(numOfActors*(actionsPerActor-1));
+        for(int j = 1; j <= numOfActors; j++) {
             final int currentActorID = j;
             String currentActorName = "Actor" + j;
-            PrivateState actor = new PrivateState() {};
+            PrivateState actor = new PrivateState() {
+            };
             Collection<Action<String>> actions = new LinkedList<>();
             Action<String> bigAction = new Action<String>() {
+                protected List<String> completedSubs;
+
                 @Override
                 protected void start() {
                     setActionName("BigAction of " + currentActorName);
                     //the big actions will send sub-actions to other actors
-                    for(int i = 1; i <= actionsPerActor - 1; i++){
+                    completedSubs = new ArrayList<>();
+                    for (int i = 1; i <= actionsPerActor - 1; i++) {
                         final String nextActor = "Actor" + (1 + ((currentActorID + i) % (numOfActors)));
                         final int name = i;
                         Action<String> subAction = new Action<String>() {
@@ -80,16 +147,19 @@ public class IterativeTest {
             bigAction.getResult().subscribe(new callback() {
                 @Override
                 public void call() {
-                    System.out.println(bigAction.getResult().get());
-                    latch.countDown();
+                    megaLatch.countDown();
                 }
             });
         }
         try {
-            latch.await(5, TimeUnit.SECONDS);
-            if(latch.getCount() > 0){
-                printError(latch.getCount() + " actors didn't finish their actions!");
+            megaLatch.await(5, TimeUnit.SECONDS);
+            if(megaLatch.getCount() > 0){
+                printError(megaLatch.getCount() + " actors didn't finish their mega-actions! (if you pass previous test," +
+                        "check your Action.then(...) method [THIS IS NOT 100% THE PROBLEM]");
+            } else {
+                printSucc("TEST OF MEGA-ACTIONS WAS COMPLETED WITH SUCCESS!");
             }
+            System.out.println("CHECKING IF ALL OF THE THREADS ARE IDLE (SHOULD BE WAITING)");
             Thread.sleep(1000);
             int waiting = 0;
             Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
@@ -97,26 +167,29 @@ public class IterativeTest {
                 if(thread.getName().contains("Thread")){
                     if(thread.getState().equals(Thread.State.WAITING)){
                         waiting++;
-                    } else {
-                        printError(thread.getName() + " should be waiting for more actions!");
                     }
                 }
             }
             if(waiting != threads){
-                printError(threads - waiting + " threads are not in WAITING state when should be!");
                 if(waiting == 0) {
                     printError("All the threads are not in waiting state, make sure you use VersionMonitor" +
                             " when no actions are in the pool to avoid busy waiting!" +
                             " Also make sure that Version Monitor is using Thread.wait()");
+                } else {
+                    printError(threads - waiting + " threads are not in WAITING state when should be!");
                 }
+            } else {
+                printSucc("TEST OF WAITING THREADS WAS COMPLETED WITH SUCCESS!");
             }
+
+            System.out.println("TESTING SHUTDOWN");
             Thread shutter = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try{
                         pool.shutdown();
                     } catch (InterruptedException e) {
-                        printError("Pool shutdown took to long!");
+                        System.out.println("Pool shutdown took to long! - interrupting shutdown!");
                     }
                 }
             });
@@ -128,29 +201,33 @@ public class IterativeTest {
             for(Thread thread : threadSet){
                 if(thread.getName().contains("Thread")){
                     if(thread.getState().equals(Thread.State.WAITING)){
-                        printError(thread.getName() + " is in WAITING state!");
                         waiting++;
                     }
                 }
             }
             if(waiting > 0){
-                printError(waiting + " threads are in WAITING state, and shouldn't be!");
                 if(waiting == threads){
-                    printError("The threads should be informed via VersionMonitor that a shutdown is performed!");
+                    printError("all of the threads are in WAITING state, and shouldn't be!!!");
+                } else {
+                    printError(waiting + " threads are in WAITING state, and shouldn't be!");
                 }
+                System.out.println("The threads should be informed via VersionMonitor that a shutdown is performed!");
+            } else {
+                printSucc("TEST OF SHUTDOWN WAS COMPLETED WITH SUCCESS!");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         if(errorCount == 0) {
-            System.out.println("####### PART 1 COMPLETED WITH NO ERRORS #######");
+            printHead("####### PART 1 COMPLETED WITH NO ERRORS #######");
         } else {
             printError("####### PART 1 FINISHED WITH " + errorCount + " ERRORS!  #######");
         }
 
-        // SECOND PART TEST:
+
+//         SECOND PART TEST:
         errorCount = 0;
-        System.out.println("####### PART 2 STARTS HERE! #######");
+        printHead("####### PART 2 STARTS HERE! #######");
         String[] input = {"src/main/java/bgu/spl/a2/testInput.txt"};
         CountDownLatch simLatch = new CountDownLatch(1);
         Thread shutter = new Thread(new Runnable() {
@@ -326,7 +403,7 @@ public class IterativeTest {
             }
 
             if(errorCount == 0) {
-                System.out.println("####### PART 2 COMPLETED WITH NO ERRORS #######");
+                printHead("####### PART 2 COMPLETED WITH NO ERRORS #######");
             } else {
                 printError("####### PART 2 FINISHED WITH " + errorCount + " ERRORS!  #######");
             }
