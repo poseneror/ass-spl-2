@@ -1,7 +1,6 @@
 package bgu.spl.a2;
 
 import bgu.spl.a2.sim.Simulator;
-import bgu.spl.a2.sim.json.JsonAction;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
