@@ -42,6 +42,13 @@
 "Prerequisites" : []
 },
 {
+"Action":"Open Course",
+"Department": "dep2",
+"Course": "course2-1",
+"Space": "5",
+"Prerequisites" : []
+},
+{
 "Action": "Add Student",
 "Department": "dep1",
 "Student": "student1"
@@ -105,6 +112,36 @@
 "Action": "Add Student",
 "Department": "dep1",
 "Student": "student13"
+},
+{
+"Action": "Add Student",
+"Department": "dep2",
+"Student": "student2-1"
+},
+{
+"Action": "Add Student",
+"Department": "dep2",
+"Student": "student2-2"
+},
+{
+"Action": "Add Student",
+"Department": "dep2",
+"Student": "student2-3"
+},
+{
+"Action": "Add Student",
+"Department": "dep2",
+"Student": "student2-4"
+},
+{
+"Action": "Add Student",
+"Department": "dep2",
+"Student": "student2-5"
+},
+{
+"Action": "Add Student",
+"Department": "dep2",
+"Student": "student2-6"
 }
 ],
 "Phase 2" : [
@@ -205,12 +242,6 @@
 },
 {
 "Action": "Participate In Course",
-"Student": "student11",
-"Course": "course1-1",
-"Grade": ["100"]
-},
-{
-"Action": "Participate In Course",
 "Student": "student1",
 "Course": "course1-4",
 "Grade": ["100"]
@@ -246,6 +277,42 @@
 "Action": "Close Course",
 "Department": "dep1",
 "Course": "course1-4"
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-1",
+"Course": "course2-1",
+"Grade": ["100"]
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-2",
+"Course": "course2-1",
+"Grade": ["90"]
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-3",
+"Course": "course2-1",
+"Grade": ["80"]
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-4",
+"Course": "course2-1",
+"Grade": ["70"]
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-5",
+"Course": "course2-1",
+"Grade": ["60"]
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-6",
+"Course": "course2-1",
+"Grade": ["50"]
 }
 ],
 "Phase 3": [

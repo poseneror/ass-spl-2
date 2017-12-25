@@ -262,7 +262,7 @@ public class IterativeTest {
             DepartmentPrivateState dep1 = ((DepartmentPrivateState) result.get("dep1"));
             for (int i = 1; i <= 3; i++) {
                 if(!dep1.getCourseList().contains("course1-" + i)){
-                    printError("dep1 does not contain course1-1 and should!");
+                    printError("dep1 does not contain course1-" + i + "and should!");
                 }
             }
             for (int i = 1; i <= 12 ; i++) {
@@ -270,6 +270,19 @@ public class IterativeTest {
                     printError("dep1 does not contain student" + i + " and should!");
                 }
             }
+            //Department 2 test
+            DepartmentPrivateState dep2 = ((DepartmentPrivateState) result.get("dep2"));
+            for (int i = 1; i <= 1; i++) {
+                if(!dep2.getCourseList().contains("course2-" + i)){
+                    printError("dep2 does not contain course2-" + i + " and should!");
+                }
+            }
+            for (int i = 1; i <= 6 ; i++) {
+                if(!dep2.getStudentList().contains("student2-" + i)){
+                    printError("dep2 does not contain student2-" + i + " and should!");
+                }
+            }
+
             //Course 1 test
             CoursePrivateState course1 = ((CoursePrivateState) result.get("course1-1"));
             if(course1.getAvailableSpots() != 3){
@@ -339,6 +352,22 @@ public class IterativeTest {
             if(course4.getRegStudents().size() != 0){
                 printError("course1-4 should not have actual registered studnets but has " + course4.getRegStudents().size());
             }
+            //Course 5 test
+            CoursePrivateState course5 = ((CoursePrivateState) result.get("course2-1"));
+            if(course5.getAvailableSpots() != 0){
+                printError("course2-1 should have no available spots but has " + course5.getAvailableSpots());
+            }
+            if(course5.getRegistered() != 5){
+                printError("course2-1 should have 5 registered studnets but has " + course5.getRegistered());
+                if(course5.getRegistered() == 6) {
+                    printError("make sure that you check for available spots before you add a student to a course");
+                }
+            }
+            if(course5.getRegStudents().size() != 5){
+                printError("course2-1 should have 5 actual registered studnets but has " + course5.getRegStudents().size());
+            }
+
+
             // Students
             StudentPrivateState student6 = (StudentPrivateState) result.get("student6");
             if(student6.getGrades().containsKey("course1-1")){
@@ -407,9 +436,8 @@ public class IterativeTest {
             } else {
                 printError("####### PART 2 FINISHED WITH " + errorCount + " ERRORS!  #######");
             }
-
         } catch (FileNotFoundException e1){
-            printError("PLEASE MAKE SURE THAT testINPUT.txt is in the \"src/main/java/bgu/spl/a2/\"");
+            printError("PLEASE MAKE SURE THAT testInput.txt IS IN \"src/main/java/bgu/spl/a2/\"");
         } catch (IOException | ClassNotFoundException e2){
             e2.printStackTrace();
         }

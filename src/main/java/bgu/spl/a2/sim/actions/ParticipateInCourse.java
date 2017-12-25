@@ -22,6 +22,7 @@ public class ParticipateInCourse extends Action<Boolean> {
 
     @Override
     protected void start() {
+        //TODO: can't use multiple thens
         CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(actorID);
         List<String> prerequisites = course.getPrequisites();
         StudentPrivateState student = (StudentPrivateState) pool.getPrivateState(studentName);
