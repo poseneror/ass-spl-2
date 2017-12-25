@@ -5,6 +5,9 @@ import bgu.spl.a2.callback;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Unregister extends Action<String> {
 
     private String studentName;
@@ -18,56 +21,39 @@ public class Unregister extends Action<String> {
     protected void start() {
         CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(actorID);
         String courseName = actorID;
-        StudentPrivateState studnet = (StudentPrivateState) pool.getPrivateState(studentName);
-        //TODO: let student do this?
+        StudentPrivateState student = (StudentPrivateState) pool.getPrivateState(studentName);
+
+        // we need to match the number of messages sent to the number in ParticipateInCourse in order to achieve the right order of actions performed
         Action<String> waitForStud = new Action<String>() {
             @Override
             protected void start() {
-                complete("wait complete");
+                complete("ready");
             }
         };
-        sendMessage(waitForStud, studentName, studnet).subscribe(new callback() {
+        sendMessage(waitForStud, studentName, student);
+        List<Action<String>> actions = new ArrayList<>();
+        actions.add(waitForStud);
+        then(actions, new callback() {
             @Override
             public void call() {
-                Action<String> waitTillReg = new Action<String>() {
+                course.removeStudent(studentName);
+                Action<String> removeGrade = new Action<String>() {
                     @Override
                     protected void start() {
-                        complete("wait complete");
+                        student.getGrades().remove(courseName);
+                        complete("Grade removed from student - " + studentName);
                     }
                 };
-                sendMessage(waitTillReg, courseName, course).subscribe(new callback() {
+                sendMessage(removeGrade, studentName, student);
+                List<Action<String>> actions = new ArrayList<>();
+                actions.add(removeGrade);
+                then(actions, new callback() {
                     @Override
                     public void call() {
-                        Action<String> removeGrade = new Action<String>() {
-                            @Override
-                            protected void start() {
-                                studnet.getGrades().remove(courseName);
-                                complete("Grade removed from student - " + studentName);
-                            }
-                        };
-                        sendMessage(removeGrade, studentName, studnet).subscribe(new callback() {
-                            @Override
-                            public void call() {
-                                Action<String> unreg = new Action<String>() {
-                                    @Override
-                                    protected void start() {
-                                        course.removeStudent(studentName);
-                                        complete(studentName + " removed from " + courseName);
-                                    }
-                                };
-                                sendMessage(unreg, courseName, course).subscribe(new callback() {
-                                    @Override
-                                    public void call() {
-                                        complete(studentName + " unregistered from " + courseName);
-                                    }
-                                });
-
-                            }
-                        });
+                        complete(studentName + " unregistered from " + courseName);
                     }
                 });
             }
         });
-
     }
 }

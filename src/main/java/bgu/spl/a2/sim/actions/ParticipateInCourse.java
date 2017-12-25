@@ -43,48 +43,31 @@ public class ParticipateInCourse extends Action<Boolean> {
                 }
             }
         };
-        // When we know if the student can register
-        sendMessage(checkPerquisites, studentName, student).subscribe(new callback() {
+        sendMessage(checkPerquisites, studentName, student);
+        List<Action<Boolean>> actions = new ArrayList<>();
+        actions.add(checkPerquisites);
+        then(actions, new callback() {
             @Override
             public void call() {
-                if (checkPerquisites.getResult().get()) {
-                    Action<Boolean> addIfThereIsPlace = new Action<Boolean>() {
-                        @Override
-                        protected void start() {
-                            if (course.getAvailableSpots() > 0) {
-                                course.addStudent(studentName);
+                if (checkPerquisites.getResult().get() && course.getAvailableSpots() > 0) {
+                        course.addStudent(studentName);
+                        Action<String> addGrade = new Action<String>() {
+                            @Override
+                            protected void start() {
+                                student.getGrades().put(courseName, grade);
+                                complete(courseName + " Grades added to " + studentName);
+                            }
+                        };
+                        sendMessage(addGrade, studentName, student);
+                        List<Action<String>> actions = new ArrayList<>();
+                        actions.add(addGrade);
+                        then(actions, new callback() {
+                            @Override
+                            public void call() {
                                 complete(true);
-                            } else {
-                                complete(false);
                             }
-                        }
-                    };
-                    sendMessage(addIfThereIsPlace, courseName, course).subscribe(new callback() {
-                        @Override
-                        public void call() {
-                            if(addIfThereIsPlace.getResult().get()) {
-                                Action<String> putGrade = new Action<String>() {
-                                    @Override
-                                    protected void start() {
-                                        setActionName("Register to course");
-                                        student.getGrades().put(courseName, grade);
-                                        complete("Updated Course Grade");
-                                    }
-                                };
-                                sendMessage(putGrade, studentName, student).subscribe(new callback() {
-                                    @Override
-                                    public void call() {
-                                        complete(true);
-                                    }
-                                });
-                            } else {
-                                // no available space
-                                complete(false);
-                            }
-                        }
-                    });
+                        });
                 } else {
-                    // no prerequisites
                     complete(false);
                 }
             }

@@ -7,6 +7,8 @@ import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
 public class CloseCourse extends Action<String> {
 
@@ -14,7 +16,6 @@ public class CloseCourse extends Action<String> {
 
     public CloseCourse(String courseName){
         this.courseName = courseName;
-
         setActionName("Close Course");
     }
 
@@ -22,20 +23,35 @@ public class CloseCourse extends Action<String> {
     protected void start() {
         final DepartmentPrivateState department = (DepartmentPrivateState) pool.getPrivateState(actorID);
         final CoursePrivateState course = (CoursePrivateState) pool.getPrivateState(courseName);
-        Collection<Action<String>> actionList = new ArrayList<>();
-        for(String studentName : course.getRegStudents()){
-            Unregister unreg = new Unregister(studentName);
-            actionList.add(unreg);
-            sendMessage(unreg, courseName, course);
-        }
+
+        // we need to match the order if people participate in the same time we close course! - first step, submit to course
+        List<Action<List<String>>> actionList = new ArrayList<>();
+        Action<List<String>> getRegStudents = new Action<List<String>>() {
+            @Override
+            protected void start() {
+                course.setAvailableSpots(-1);
+                complete(course.getRegStudents());
+            }
+        };
+        sendMessage(getRegStudents, courseName, course);
+        actionList.add(getRegStudents);
         then(actionList, new callback() {
             @Override
             public void call() {
-                department.removeCourse(courseName);
-                course.setAvailableSpots(-1);
-                complete("Course closed");
+                List<Action<String>> actionList = new ArrayList<>();
+                for(String studentName : getRegStudents.getResult().get()){
+                    Unregister unreg = new Unregister(studentName);
+                    actionList.add(unreg);
+                    sendMessage(unreg, courseName, course);
+                }
+                then(actionList, new callback() {
+                    @Override
+                    public void call() {
+                         department.removeCourse(courseName);
+                        complete("Course closed");
+                    }
+                });
             }
         });
-
     }
 }
