@@ -387,11 +387,11 @@ public class IterativeTest {
             }
             StudentPrivateState student2 = (StudentPrivateState) result.get("student2");
             if(student2.getGrades().containsKey("course1-4")){
-                printError("student6 still has grades for course1-4! (which was closed)");
+                printError("student2 still has grades for course1-4! (which was closed)");
             }
             StudentPrivateState student3 = (StudentPrivateState) result.get("student3");
             if(student3.getGrades().containsKey("course1-4")){
-                printError("student6 still has grades for course1-4! (which was closed)");
+                printError("student3 still has grades for course1-4! (which was closed)");
             }
             StudentPrivateState student12 = (StudentPrivateState) result.get("student12");
             if(!student12.getGrades().containsKey("course1-2") | student12.getGrades().size() != 1){
