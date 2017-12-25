@@ -44,29 +44,29 @@ public class ParticipateInCourse extends Action<Boolean> {
             }
         };
         sendMessage(checkPerquisites, studentName, student);
-        List<Action<Boolean>> actions = new ArrayList<>();
-        actions.add(checkPerquisites);
-        then(actions, new callback() {
+        List<Action<Boolean>> actions1 = new ArrayList<>();
+        actions1.add(checkPerquisites);
+        then(actions1, new callback() {
             @Override
             public void call() {
                 if (checkPerquisites.getResult().get() && course.getAvailableSpots() > 0) {
-                        course.addStudent(studentName);
-                        Action<String> addGrade = new Action<String>() {
-                            @Override
-                            protected void start() {
-                                student.getGrades().put(courseName, grade);
-                                complete(courseName + " Grades added to " + studentName);
-                            }
-                        };
-                        sendMessage(addGrade, studentName, student);
-                        List<Action<String>> actions = new ArrayList<>();
-                        actions.add(addGrade);
-                        then(actions, new callback() {
-                            @Override
-                            public void call() {
+                    course.addStudent(studentName);
+                    Action<String> addGrade = new Action<String>() {
+                        @Override
+                        protected void start() {
+                            student.getGrades().put(courseName, grade);
+                            complete(courseName + " Grades added to " + studentName);
+                        }
+                    };
+                    sendMessage(addGrade, studentName, student);
+                    List<Action<String>> actions2 = new ArrayList<>();
+                    actions2.add(addGrade);
+                    then(actions2, new callback() {
+                        @Override
+                        public void call() {
                                 complete(true);
-                            }
-                        });
+                        }
+                    });
                 } else {
                     complete(false);
                 }

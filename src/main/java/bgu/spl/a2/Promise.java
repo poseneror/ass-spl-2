@@ -36,7 +36,7 @@ public class Promise<T>{
 	 *             in the case where this method is called and this object is
 	 *             not yet resolved
 	 */
-	public T get() throws IllegalStateException {
+	synchronized public T get() throws IllegalStateException {
 		if(isResolved()){
 			return value;
 		}
@@ -67,14 +67,19 @@ public class Promise<T>{
 	 * @param value
 	 *            - the value to resolve this promise object with
 	 */
+
+
 	public void resolve(T value) throws IllegalStateException{
 		if(resolved){
 			throw new IllegalStateException();
 		}
 		this.value = value;
-		this.resolved = true;
-		for(callback sub : subscribers){
-			sub.call();
+		// this part needs to be synchronized with the subscribe method, in order to not miss anyone!
+		synchronized (this) {
+			this.resolved = true;
+			for (callback sub : subscribers) {
+				sub.call();
+			}
 		}
 		subscribers.clear();
 	}
@@ -94,10 +99,18 @@ public class Promise<T>{
 	 */
 
 	public void subscribe(callback callback) {
-		if(isResolved()){
+		boolean shouldCall = false;
+		// we need to synchronize the following actions, because it is possible that a callback would be added
+		// after the callback calling in the Resolve method, and thus wouldn't be called at all
+		synchronized (this) {
+			if (isResolved()) {
+				shouldCall = true;
+			} else {
+				subscribers.add(callback);
+			}
+		}
+		if(shouldCall){
 			callback.call();
-		} else {
-			subscribers.add(callback);
 		}
 	}
 }

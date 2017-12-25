@@ -71,9 +71,9 @@ public class IterativeTest {
             e.printStackTrace();
         }
 
-        System.out.println("ADDING " + numOfActors * actionsPerActor  * 10 + " MINI-ACTIONS TO THE ACTORS IN THE POOL");
-        CountDownLatch miniLatch = new CountDownLatch(numOfActors * actionsPerActor  * 10 );
-        for(int k = 1; k <= numOfActors*actionsPerActor * 10; k++) {
+        System.out.println("ADDING " + numOfActors * actionsPerActor  + " MINI-ACTIONS TO THE ACTORS IN THE POOL");
+        CountDownLatch miniLatch = new CountDownLatch(numOfActors * actionsPerActor );
+        for(int k = 1; k <= numOfActors*actionsPerActor; k++) {
             final String nextActor = "Actor" + (1 + (k % (numOfActors)));
             final int name = k;
             Action<String> miniAction = new Action<String>() {
@@ -219,7 +219,7 @@ public class IterativeTest {
             e.printStackTrace();
         }
         if(errorCount == 0) {
-            printHead("####### PART 1 COMPLETED WITH NO ERRORS #######");
+            printHead(  "####### PART 1 COMPLETED WITH NO ERRORS #######");
         } else {
             printError("####### PART 1 FINISHED WITH " + errorCount + " ERRORS!  #######");
         }
