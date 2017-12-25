@@ -402,7 +402,7 @@ public class IterativeTest {
             }
             StudentPrivateState student13 = (StudentPrivateState) result.get("student13");
             if(!student13.getGrades().containsKey("course1-2")){
-                printError("student12 should have grades for course1-2! (registered with preferences)");
+                printError("student13 should have grades for course1-2! (registered with preferences)");
             }
             if(student13.getGrades().size() != 1){
                 printError("student13 was supposed to register to exactly 1 course but is registered to " + student13.getGrades().size());
