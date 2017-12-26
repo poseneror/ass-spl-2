@@ -49,6 +49,20 @@
 "Prerequisites" : []
 },
 {
+"Action":"Open Course",
+"Department": "dep2",
+"Course": "course2-2",
+"Space": "5",
+"Prerequisites" : []
+},
+{
+"Action":"Open Course",
+"Department": "dep2",
+"Course": "course2-3",
+"Space": "5",
+"Prerequisites" : []
+},
+{
 "Action": "Add Student",
 "Department": "dep1",
 "Student": "student1"
@@ -313,6 +327,39 @@
 "Student": "student2-6",
 "Course": "course2-1",
 "Grade": ["50"]
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-1",
+"Course": "course2-2",
+"Grade": ["60"]
+},
+{
+"Action": "Unregister",
+"Student": "student2-1",
+"Course": "course2-2"
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-1",
+"Course": "course2-2",
+"Grade": ["100"]
+},
+{
+"Action": "Unregister",
+"Student": "student2-1",
+"Course": "course2-3"
+},
+{
+"Action": "Participate In Course",
+"Student": "student2-1",
+"Course": "course2-3",
+"Grade": ["100"]
+},
+{
+"Action": "Unregister",
+"Student": "student2-1",
+"Course": "course2-3"
 }
 ],
 "Phase 3": [
@@ -393,7 +440,7 @@
 "Department": "dep1",
 "Students": ["student1","student12"],
 "Computer": "A",
-"Conditions" : ["course1-1", "course1-2", "course1-3"]
+"Conditions" : ["course1-1", "course1-2"]
 },
 {
 "Action" : "Administrative Check",

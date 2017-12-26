@@ -47,7 +47,13 @@ public class ParticipateInCourse extends Action<Boolean> {
         sendMessage(checkPerquisites, studentName, student);
         List<Action<Boolean>> actions1 = new ArrayList<>();
         actions1.add(checkPerquisites);
-        then(actions1, new callback() {
+        callback second = new callback() {
+            @Override
+            public void call() {
+                complete(true);
+            }
+        };
+        callback first = new callback() {
             @Override
             public void call() {
                 if (checkPerquisites.getResult().get() && course.getAvailableSpots() > 0) {
@@ -62,16 +68,12 @@ public class ParticipateInCourse extends Action<Boolean> {
                     sendMessage(addGrade, studentName, student);
                     List<Action<String>> actions2 = new ArrayList<>();
                     actions2.add(addGrade);
-                    then(actions2, new callback() {
-                        @Override
-                        public void call() {
-                                complete(true);
-                        }
-                    });
+                    then(actions2, second);
                 } else {
                     complete(false);
                 }
             }
-        });
+        };
+        then(actions1, first);
     }
 }

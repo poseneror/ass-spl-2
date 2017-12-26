@@ -272,7 +272,7 @@ public class IterativeTest {
             }
             //Department 2 test
             DepartmentPrivateState dep2 = ((DepartmentPrivateState) result.get("dep2"));
-            for (int i = 1; i <= 1; i++) {
+            for (int i = 1; i <= 3; i++) {
                 if(!dep2.getCourseList().contains("course2-" + i)){
                     printError("dep2 does not contain course2-" + i + " and should!");
                 }
@@ -367,6 +367,34 @@ public class IterativeTest {
                 printError("course2-1 should have 5 actual registered studnets but has " + course5.getRegStudents().size());
             }
 
+            //Course 6 test
+            CoursePrivateState course6 = ((CoursePrivateState) result.get("course2-2"));
+            if(course6.getAvailableSpots() != 4){
+                printError("course2-2 should have 4 available spots but has " + course6.getAvailableSpots() +
+                        "\nMAKE SURE THAT REGISTER -> UNREGISTER -> REGISTER IS DONE IN THE RIGHT ORDER");
+            }
+            if(course6.getRegistered() != 1){
+                printError("course2-2 should have 1 registered studnet but has " + course6.getRegistered() +
+                        "\nMAKE SURE THAT REGISTER -> UNREGISTER -> REGISTER IS DONE IN THE RIGHT ORDER");
+            }
+            if(course6.getRegStudents().size() != 1){
+                printError("course2-2 should have 1 actual registered studnet but has " + course6.getRegStudents().size());
+            }
+
+            //Course 7 test
+            CoursePrivateState course7 = ((CoursePrivateState) result.get("course2-3"));
+            if(course7.getAvailableSpots() != 5){
+                printError("course2-3 should have 5 available spots but has " + course7.getAvailableSpots() +
+                        "\nMAKE SURE THAT UNREGISTER -> REGISTER -> UNREGISTER IS DONE IN THE RIGHT ORDER");
+            }
+            if(course7.getRegistered() != 0){
+                printError("course2-3 should have no registered studnets but has " + course7.getRegistered() +
+                        "\nMAKE SURE THAT UNREGISTER -> REGISTER -> UNREGISTER IS DONE IN THE RIGHT ORDER");
+            }
+            if(course7.getRegStudents().size() != 0){
+                printError("course2-3 should have no actual registered studnet but has " + course7.getRegStudents().size());
+            }
+
 
             // Students
             StudentPrivateState student6 = (StudentPrivateState) result.get("student6");
@@ -407,6 +435,20 @@ public class IterativeTest {
             if(student13.getGrades().size() != 1){
                 printError("student13 was supposed to register to exactly 1 course but is registered to " + student13.getGrades().size());
             }
+
+
+            StudentPrivateState student21 = (StudentPrivateState) result.get("student2-1");
+            if(student21.getGrades().containsKey("course2-3")){
+                printError("student2-1 shouldn't be registered to course2-3, but has grades for it");
+            }
+            if(!student21.getGrades().containsKey("course2-2")){
+                printError("student2-1 should be registered to course2-2, but has no grade in it");
+            } else {
+                if(student21.getGrades().get("course2-2") != 100){
+                    printError("student2-1 grade in course 2-2 should be 100 but found " + student21.getGrades().get("course2-2"));
+                }
+            }
+
 
             //Admin Check
 

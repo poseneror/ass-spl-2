@@ -33,7 +33,13 @@ public class Unregister extends Action<String> {
         sendMessage(waitForStud, studentName, student);
         List<Action<String>> actions1 = new ArrayList<>();
         actions1.add(waitForStud);
-        then(actions1, new callback() {
+        callback second = new callback() {
+            @Override
+            public void call() {
+                complete(studentName + " unregistered from " + courseName);
+            }
+        };
+        callback first = new callback() {
             @Override
             public void call() {
                 course.removeStudent(studentName);
@@ -47,13 +53,9 @@ public class Unregister extends Action<String> {
                 sendMessage(removeGrade, studentName, student);
                 List<Action<String>> actions2 = new ArrayList<>();
                 actions2.add(removeGrade);
-                then(actions2, new callback() {
-                    @Override
-                    public void call() {
-                        complete(studentName + " unregistered from " + courseName);
-                    }
-                });
+                then(actions2, second);
             }
-        });
+        };
+        then(actions1, first);
     }
 }

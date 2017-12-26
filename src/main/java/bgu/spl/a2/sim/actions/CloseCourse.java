@@ -34,23 +34,17 @@ public class CloseCourse extends Action<String> {
         };
         sendMessage(closeCourse, courseName, course);
         actions1.add(closeCourse);
-        then(actions1, new callback() {
+        callback first = new callback() {
             @Override
             public void call() {
-                List<Action<String>> actions2 = new ArrayList<>();
-                for(String studentName : course.getRegStudents()){
+                for(String studentName : closeCourse.getResult().get()){
                     Unregister unreg = new Unregister(studentName);
-                    actions2.add(unreg);
                     sendMessage(unreg, courseName, course);
                 }
-                then(actions2, new callback() {
-                    @Override
-                    public void call() {
-                         department.removeCourse(courseName);
-                        complete("Course closed");
-                    }
-                });
+                department.removeCourse(courseName);
+                complete("Course closed");
             }
-        });
+        };
+        then(actions1, first);
     }
 }

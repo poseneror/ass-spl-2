@@ -72,6 +72,11 @@ public abstract class Action<R> {
      * @param actions
      * @param callback the callback to execute once all the results are resolved
      */
+    private void setNewCallback(callback callback){
+        continueCallback = callback;
+        secondGo = true;
+        pool.submit(this, actorID, actorState);
+    }
 
     protected final void then(Collection<? extends Action<?>> actions, callback callback) {
         final Action act = this;
@@ -85,9 +90,7 @@ public abstract class Action<R> {
                 public void call() {
                     counter.countDown();
                     if (counter.getCount() == 0) {
-                        continueCallback = callback;
-                        secondGo = true;
-                        pool.submit(act, actorID, actorState);
+                        setNewCallback(callback);
                     }
                 }
             });
