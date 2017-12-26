@@ -28,7 +28,7 @@ public abstract class PrivateState implements Serializable{
 	 *  
 	 * @param actionName
 	 */
-	public void addRecord(String actionName){
+	synchronized public void addRecord(String actionName){
 		history.add(actionName);
 	}
 	

@@ -10,7 +10,9 @@ import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class CheckObligations extends Action<String> {
 
@@ -22,7 +24,7 @@ public class CheckObligations extends Action<String> {
         this.conditions = conditions;
         this.cType = cType;
 
-        setActionName("Check Obligations");
+        setActionName("Administrative Check");
     }
 
 
@@ -38,7 +40,11 @@ public class CheckObligations extends Action<String> {
             promise.subscribe(new callback() {
                 @Override
                 public void call() {
-                    final long sign = promise.get().checkAndSign(conditions, student.getGrades());
+                    HashMap<String, Integer> grades = new HashMap<>();
+                    for(String courseName : conditions){
+                        grades.put(courseName, student.getGrade(courseName));
+                    }
+                    final long sign = promise.get().checkAndSign(conditions, grades);
                     signStudent.setSign(sign);
                     sendMessage(signStudent, studentName, student);
                     Warehouse.getInstance().releaseComputer(cType);

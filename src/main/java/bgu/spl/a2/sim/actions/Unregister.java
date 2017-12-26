@@ -46,7 +46,7 @@ public class Unregister extends Action<String> {
                 Action<String> removeGrade = new Action<String>() {
                     @Override
                     protected void start() {
-                        student.getGrades().remove(courseName);
+                        student.removeGrade(courseName);
                         complete("Grade removed from student - " + studentName);
                     }
                 };

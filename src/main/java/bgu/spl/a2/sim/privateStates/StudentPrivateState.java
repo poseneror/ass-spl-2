@@ -23,6 +23,22 @@ public class StudentPrivateState extends PrivateState{
 		grades = new HashMap<>();
 	}
 
+	synchronized public void addGrade(String courseName, Integer grade){
+		grades.put(courseName, grade);
+	}
+
+	synchronized public void removeGrade(String courseName){
+		grades.remove(courseName);
+	}
+
+	synchronized public Integer getGrade(String courseName){
+		if(!grades.containsKey(courseName)){
+			return -1;
+		} else {
+			return grades.get(courseName);
+		}
+	}
+
 	public HashMap<String, Integer> getGrades() {
 		return grades;
 	}

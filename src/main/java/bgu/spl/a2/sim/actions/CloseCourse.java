@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class CloseCourse extends Action<String> {
 
@@ -37,7 +38,8 @@ public class CloseCourse extends Action<String> {
         callback first = new callback() {
             @Override
             public void call() {
-                for(String studentName : closeCourse.getResult().get()){
+                ArrayList<String> students = new ArrayList<>(closeCourse.getResult().get());
+                for(String studentName : students){
                     Unregister unreg = new Unregister(studentName);
                     sendMessage(unreg, courseName, course);
                 }

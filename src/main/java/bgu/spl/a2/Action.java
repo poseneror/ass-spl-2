@@ -80,7 +80,7 @@ public abstract class Action<R> {
 
     protected final void then(Collection<? extends Action<?>> actions, callback callback) {
         final Action act = this;
-        CountDownLatch counter = new CountDownLatch(actions.size());
+        int[] counter = {actions.size()};
         if(actions.isEmpty()){
             pool.submit(act, actorID, actorState);
         }
@@ -88,9 +88,11 @@ public abstract class Action<R> {
        	    action.getResult().subscribe(new callback() {
                 @Override
                 public void call() {
-                    counter.countDown();
-                    if (counter.getCount() == 0) {
-                        setNewCallback(callback);
+                    synchronized (counter) {
+                        counter[0]--;
+                        if (counter[0] == 0) {
+                            setNewCallback(callback);
+                        }
                     }
                 }
             });

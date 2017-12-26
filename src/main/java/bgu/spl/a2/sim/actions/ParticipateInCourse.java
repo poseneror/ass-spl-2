@@ -61,7 +61,7 @@ public class ParticipateInCourse extends Action<Boolean> {
                     Action<String> addGrade = new Action<String>() {
                         @Override
                         protected void start() {
-                            student.getGrades().put(courseName, grade);
+                            student.addGrade(courseName, grade);
                             complete(courseName + " Grades added to " + studentName);
                         }
                     };

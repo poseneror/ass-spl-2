@@ -10,9 +10,9 @@ import java.util.concurrent.CountDownLatch;
 
 public class main {
     public static void main(String[] args) {
-        // THIS TEST WILL RUN THE SIMULATOR FOR 100 TIMES IN A ROW
-        for(int i = 0; i < 100; i++){
-            String[] a = {"src/main/java/bgu/spl/a2/sim/input.txt"};
+        // THIS TEST WILL RUN THE TEST FOR 100 TIMES IN A ROW
+        for(int i = 0; i < 200; i++){
+            String[] a = new String[0];
             try {
                 IterativeTest.main(a);
             } catch (Exception e){

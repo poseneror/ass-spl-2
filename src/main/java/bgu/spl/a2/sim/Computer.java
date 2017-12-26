@@ -28,7 +28,7 @@ public class Computer {
 		//TODO:check councurency problems
 		boolean pass = true;
 		for(String courseName : courses){
-			if(!coursesGrades.containsKey(courseName) || coursesGrades.get(courseName) < 56){
+			if(coursesGrades.get(courseName) < 56){
 				pass = false;
 			}
 		}

@@ -65,7 +65,7 @@ public class ActorThreadPool {
 			Thread t = new Thread(new Runnable() {
 				@Override
 				public void run() {
-					while (!shutdown[0]) {
+					while (!Thread.currentThread().isInterrupted()) {
 						int version = actionsVM.getVersion();
 						AssignedAction action = getAction();
 						if (action != null) {
@@ -74,7 +74,9 @@ public class ActorThreadPool {
 							UnlockActor(action.getActorID());
 							actionsVM.inc();
 						} else {
-							try {actionsVM.await(version);} catch (InterruptedException ignore) {}
+							try {actionsVM.await(version);} catch (InterruptedException ignore) {
+								Thread.currentThread().interrupt();
+							}
 						}
 					}
 					shutDownLatch.countDown();
@@ -153,6 +155,9 @@ public class ActorThreadPool {
 	 *             if the thread that shut down the threads is interrupted
 	 */
 	public void shutdown() throws InterruptedException {
+		for(Thread t : threads){
+			t.interrupt();
+		}
 		shutdown[0] = true;
 		actionsVM.inc();
 		shutDownLatch.await();
