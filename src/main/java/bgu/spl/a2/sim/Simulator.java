@@ -73,65 +73,35 @@ public class Simulator {
 						.addComputer(jsonComputer.getType(), Long.parseLong(jsonComputer.getSigSuccess()),
 								Long.parseLong(jsonComputer.getSigFail()));
 			}
-
 			start();
-
-			//Phase 1:
-			phaseCounter = new CountDownLatch(input.getPhase1().size());
-			if(phaseCounter.getCount() != 0) {
-				for (JsonAction actionConf : input.getPhase1()) {
-					submitAction(actionConf);
-				}
-				try {
-					phaseCounter.await();
-					System.out.println("FINISHED PHASE 1");
-					phaseCounter = new CountDownLatch(input.getPhase2().size());
-					if(phaseCounter.getCount() != 0) {
-						for (JsonAction actionConf : input.getPhase2()) {
-							submitAction(actionConf);
-						}
-						try {
-							phaseCounter.await();
-							System.out.println("FINISHED PHASE 2");
-							phaseCounter = new CountDownLatch(input.getPhase3().size());
-							if(phaseCounter.getCount() != 0) {
-								for (JsonAction actionConf : input.getPhase3()) {
-									submitAction(actionConf);
-								}
-								try {
-									phaseCounter.await();
-									System.out.println("FINISHED PHASE 3");
-									HashMap<String, PrivateState> result = end();
-									FileOutputStream fout = new FileOutputStream("result.ser");
-									try {
-										ObjectOutputStream oos = new ObjectOutputStream(fout);
-										oos.writeObject(result);
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
-								} catch (InterruptedException e3) {
-									e3.printStackTrace();
-								}
-							} else {
-								end();
-							}
-						} catch (InterruptedException e2) {
-							e2.printStackTrace();
-						}
-					} else {
-						end();
-					}
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
-			} else {
-				end();
+			try {
+				runPhase(input.getPhase1());
+				runPhase(input.getPhase2());
+				runPhase(input.getPhase3());
+			} catch (InterruptedException ignore){}
+			HashMap<String, PrivateState> result = end();
+			FileOutputStream fout = new FileOutputStream("result.ser");
+			try {
+				ObjectOutputStream oos = new ObjectOutputStream(fout);
+				oos.writeObject(result);
+			} catch (IOException e2) {
+				e2.printStackTrace();
 			}
-			end();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
 		}
 	}
+
+	private static void runPhase(List<JsonAction> phase) throws InterruptedException{
+		phaseCounter = new CountDownLatch(phase.size());
+		if(phaseCounter.getCount() != 0) {
+			for (JsonAction actionConf : phase) {
+				submitAction(actionConf);
+			}
+			phaseCounter.await();
+		}
+	}
+
 	private static void submitAction(JsonAction actionConf) {
 		Action action;
 		String actorId;
